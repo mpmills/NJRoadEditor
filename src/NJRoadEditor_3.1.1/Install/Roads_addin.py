@@ -67,9 +67,10 @@ lastselect_fields = "Empty"
 segmentgeo = "Empty"
 INTOOL = False
 tbxloc2 = os.path.dirname(__file__) + r"\NJRE.pyt"
+tbx_mbi_sld_manager = os.path.dirname(__file__) + r"\SLD_Manager.pyt"
 
 global tbxloc2
-
+global tbx_mbi_sld_manager
 
 
 segmentfc = ""; segmentchangetab = ""; transtab = ""; segnametab = ""; segshieldtab = ""; segcommtab = ""; linreftab = ""; sldtab = "";
@@ -636,6 +637,30 @@ class ButtonClass337(object):
             trace = traceback.format_exc()
             NJRE_logger.error('Data Model tool failed with exception')
             NJRE_logger.exception(trace)
+
+
+#------------------------------------------------------------------------------
+# BUTTON - Michael Baker International - Global SRI Change
+class ButtonClass701(object):
+    """Implementation for Roads_addin.button_mbi_ChangeSRI"""
+    def __init__(self):
+        self.enabled = True
+        self.checked = False
+        # global NJRE_logger - consider using existing logging functionality?
+
+    def onClick(self):
+        print "where is the button!!"
+        global tbx_mbi_sld_manager
+        try:
+            pythonaddins.MessageBox('MBI Global Update of SRI', 'MBI Change SRI', 0)
+            pythonaddins.GPToolDialog(tbx_mbi_sld_manager, "ChangeSRI")
+            # arcpy.RefreshActiveView()
+        except Exception as ex:
+            trace = traceback.format_exc()
+            print trace
+            print "error:" + ex.message
+            # arcpy.AddMessage("something went wrong." + ex.message)
+
 
 #------------------------------------------------------------------------------
 # EXTENSION - NJ ROAD EDITOR EXTENSION

@@ -2,10 +2,10 @@
 # Name:         SLD_Manager.pyt
 # Purpose:      Python toolbox file.
 #
-# Author:       NJ Office of GIS
-# Contact:      gis-admin@oit.state.nj.us
+# Author:       NJ Office of GIS, Michael Baker International
+# Contact:      gis-admin@oit.state.nj.us, michael.mills@mbakerintl.com
 #
-# Created:      12/3/2014
+# Created:      1/19/2016
 # Copyright:    (c) NJ Office of GIS 2014
 # Licence:      GPLv3
 
@@ -96,7 +96,7 @@ class Toolbox(object):
     def __init__(self):
         """Define the toolbox (the name of the toolbox is the name of the
         .pyt file)."""
-        self.label = "SLD Manager"
+        self.label = "SLD_Manager"
         self.alias = "SLD_Manager"
 
         # List of tool classes associated with this toolbox
@@ -105,21 +105,22 @@ class Toolbox(object):
 
 class ChangeSRI(object):
 
+    print "Change SRI"
+
     def __init__(self):
         """
         Global Change SRI:
         This tool with update the SLD_Route and LINEAR_REF tables
         The SRI value in both fields will be updated with the new SRI which is provided by the user.
         """
-        self.label = "Global Change SRI"
+        self.label = "ChangeSRI"
         self.description = "Update the SRI in the SLD_ROUTE and LINEAR_REF Tables"
-        self.canRunInBackground = False
+        # self.canRunInBackground = False
         
         # global segmentfc, segmentchangetab, transtab, segnametab, segshieldtab, segcommtab, linreftab, sldroutetab
 
     def getParameterInfo(self):
         """Define parameter definitions"""
-        #list_route_sri = ["00000001__", "00000171__"]
         list_route_type = [d for d in arcpy.da.ListDomains(arcpy.env.workspace) if d.name == 'ROUTE_TYPE'][0].codedValues.values()
         
         param_sri = arcpy.Parameter(
