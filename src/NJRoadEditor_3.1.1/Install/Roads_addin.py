@@ -652,7 +652,7 @@ class ButtonClass701(object):
         print "where is the button!!"
         global tbx_mbi_sld_manager
         try:
-            pythonaddins.MessageBox('MBI Global Update of SRI', 'MBI Change SRI', 0)
+            # pythonaddins.MessageBox('MBI Global Update of SRI', 'MBI Change SRI', 0)
             pythonaddins.GPToolDialog(tbx_mbi_sld_manager, "ChangeSRI")
             # arcpy.RefreshActiveView()
         except Exception as ex:
