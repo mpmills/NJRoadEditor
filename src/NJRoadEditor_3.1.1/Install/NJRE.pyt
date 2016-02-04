@@ -1278,7 +1278,7 @@ class NewSegment(object):
 
         # If SEG_TYPE_ID is AD, then ROUTE_TYPE_ID must be 8 for a ramp.
         if parameters[40].value == "AD - Acceleration/Deceleration":
-    	   parameters[45].value = "Ramp"
+            parameters[45].value = "Ramp"
 
 
         return
@@ -1664,8 +1664,6 @@ class NewSegment(object):
             #islinref = True
         elif parameters[19].valueAsText == 'Private' or parameters[19].valueAsText == 'Private (with linear referencing)':
             segfields['JURIS_TYPE_ID'] = 'PRI'
-##        elif parameters[19].valueAsText == 'Private (with linear referencing)':
-##            islinref = True
         elif parameters[19].valueAsText == 'Unknown':
             segfields['JURIS_TYPE_ID'] = 'UNK'
         else:
@@ -1729,8 +1727,6 @@ class NewSegment(object):
             arcpy.AddMessage("SEG_NAME variables validated")
         ############################################################################
         ## SEG_SHIELD Parameters
-##        seg_shield['UPDATE_USER'] = sdedescribe.connectionProperties.user
-        shieldtoken = [0, 0, 0, 0, 0]
         if seg_name['NAME_TYPE_ID'] == "H":  # only populate if the seg name is "highway"
             # RANK
             if parameters[33].value:
@@ -1780,6 +1776,10 @@ class NewSegment(object):
                     if value == parameters[40].value:
                         lin_ref['SEG_TYPE_ID'] = key
 
+            # arcpy.AddMessage('from value {0}'.format(parameters[41].value))
+            # if parameters[42].value and not parameters[41].value:
+            #     lin_ref['MILEPOST_FR'] = 0
+            # else:
             lin_ref['MILEPOST_FR'] = parameters[41].value
             lin_ref['MILEPOST_TO'] = parameters[42].value
             lin_ref['RCF'] = parameters[43].valueAsText
@@ -1810,7 +1810,7 @@ class NewSegment(object):
                     if parameters[45].value:
                         for key,value in Domains['ROUTE_TYPE'].iteritems():
                             if value == parameters[45].value:
-                                seg_name['ROUTE_TYPE_ID'] = key
+                                sld_route['ROUTE_TYPE_ID'] = key
                     if parameters[46].value:
                         sld_route['SLD_NAME'] = parameters[46].valueAsText
                     if parameters[47].value:
@@ -1928,9 +1928,9 @@ class NewSegment(object):
                 row.setValue('LRS_TYPE_ID', lin_ref['LRS_TYPE_ID'])
             if lin_ref['SEG_TYPE_ID']:
                 row.setValue('SEG_TYPE_ID', lin_ref['SEG_TYPE_ID'])
-            if lin_ref['MILEPOST_FR']:
+            if lin_ref['MILEPOST_FR'] or lin_ref['MILEPOST_FR'] == 0:
                 row.setValue('MILEPOST_FR', lin_ref['MILEPOST_FR'])
-            if lin_ref['MILEPOST_TO']:
+            if lin_ref['MILEPOST_TO'] or lin_ref['MILEPOST_TO'] == 0:
                 row.setValue('MILEPOST_TO', lin_ref['MILEPOST_TO'])
             if lin_ref['RCF']:
                 row.setValue('RCF', lin_ref['RCF'])
@@ -3250,7 +3250,7 @@ class SplitSegment(object):
 # ||||||||||||||||||||||||||||||||||\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 # ||||||||||||||||||||||||||||||||||\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 # ||||||||||||||||||||||||||||||||||\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
-
+MergeAltered = [False]*4
 class Merge(object):
     def __init__(self):
         """Define the tool (tool name is the name of the class)."""
@@ -3499,7 +3499,7 @@ class Merge(object):
         validation is performed.  This method is called whenever a parameter
         has been changed."""
         import json, arcpy
-        global USER
+        global USER, MergeAltered
         # ----------------------------------------------------------------------
         # Define globals
         global merge_left_interp, merge_right_interp
@@ -3587,7 +3587,7 @@ class Merge(object):
         ######################################################################
         addintmess = {'result': 'na', 'message': 'na', 'addrlfr': False, 'addrlto': False, 'addrrfr': False, 'addrrto': False}
 
-        if segmentrow[4] and segmentrow[5] and delrows[0][4] and delrows[0][5] and not parameters[2].altered and not parameters[3].altered:
+        if segmentrow[4] and segmentrow[5] and delrows[0][4] and delrows[0][5] and not MergeAltered[0] and not MergeAltered[1]:
 
             new_l_dir = segmentrow[5] - segmentrow[4]
             del_l_dir = delrows[0][5] - delrows[0][4]
@@ -3599,11 +3599,13 @@ class Merge(object):
                     parameters[3].value = segmentrow[5]
                     addintmess['addrlfr'] = True; addintmess['addrlto'] = True
                     merge_left_interp = True
+                    MergeAltered[0] = True; MergeAltered[1] = True
                 if segmentrow[4] < delrows[0][5]:  # newrow has the lesser addresses
                     parameters[2].value = segmentrow[4]
                     parameters[3].value = delrows[0][5]
                     addintmess['addrlfr'] = True; addintmess['addrlto'] = True
                     merge_left_interp = True
+                    MergeAltered[0] = True; MergeAltered[1] = True
 
             # left side both decreasing
             if new_l_dir < 0 and del_l_dir < 0:  # both decreasing
@@ -3612,13 +3614,15 @@ class Merge(object):
                     parameters[3].value = segmentrow[5]
                     addintmess['addrlfr'] = True; addintmess['addrlto'] = True
                     merge_left_interp = True
+                    MergeAltered[0] = True; MergeAltered[1] = True
                 if segmentrow[4] > delrows[0][5]:  # newrow has the larger addresses
                     parameters[2].value = segmentrow[4]
                     parameters[3].value = delrows[0][5]
                     addintmess['addrlfr'] = True; addintmess['addrlto'] = True
                     merge_left_interp = True
+                    MergeAltered[0] = True; MergeAltered[1] = True
 
-        if segmentrow[6] and segmentrow[7] and delrows[0][6] and delrows[0][7] and not parameters[4].altered and not parameters[5].altered:
+        if segmentrow[6] and segmentrow[7] and delrows[0][6] and delrows[0][7] and not MergeAltered[2] and not MergeAltered[3]:
 
             new_r_dir = segmentrow[7] - segmentrow[6]
             del_r_dir = delrows[0][7] - delrows[0][6]
@@ -3630,11 +3634,13 @@ class Merge(object):
                     parameters[5].value = segmentrow[7]
                     addintmess['addrrfr'] = True; addintmess['addrrto'] = True
                     merge_right_interp = True
+                    MergeAltered[2] = True; MergeAltered[3] = True
                 if segmentrow[6] < delrows[0][7]:  # newrow has the lesser addresses
                     parameters[4].value = segmentrow[6]
                     parameters[5].value = delrows[0][7]
                     addintmess['addrrfr'] = True; addintmess['addrrto'] = True
                     merge_right_interp = True
+                    MergeAltered[2] = True; MergeAltered[3] = True
 
             # right side both decreasing
             if new_r_dir < 0 and del_r_dir < 0:  # both decreasing
@@ -3643,24 +3649,30 @@ class Merge(object):
                     parameters[5].value = segmentrow[7]
                     addintmess['addrrfr'] = True; addintmess['addrrto'] = True
                     merge_right_interp = True
+                    MergeAltered[2] = True; MergeAltered[3] = True
                 if segmentrow[6] > delrows[0][7]:  # newrow has the greater addresses
                     parameters[4].value = segmentrow[6]
                     parameters[5].value = delrows[0][7]
                     addintmess['addrrfr'] = True; addintmess['addrrto'] = True
                     merge_right_interp = True
+                    MergeAltered[2] = True; MergeAltered[3] = True
 
-        if not parameters[2].altered and addintmess['addrlfr'] == False:
+        if not parameters[2].altered and not addintmess['addrlfr'] and parameters[2].value and not MergeAltered[0]:
             if segmentrow[4]:
                 parameters[2].value = segmentrow[4]
-        if not parameters[3].altered and addintmess['addrlto'] == False:
+                MergeAltered[0] = True
+        if not parameters[3].altered and not addintmess['addrlto'] and parameters[3].value and not MergeAltered[1]:
             if segmentrow[5]:
                 parameters[3].value = segmentrow[5]
-        if not parameters[4].altered and addintmess['addrrfr'] == False:
+                MergeAltered[1] = True
+        if not parameters[4].altered and not addintmess['addrrfr'] and parameters[4].value and not MergeAltered[2]:
             if segmentrow[6]:
                 parameters[4].value = segmentrow[6]
-        if not parameters[5].altered and addintmess['addrrto'] == False:
+                MergeAltered[2] = True
+        if not parameters[5].altered and not addintmess['addrrto'] and parameters[5].value and not MergeAltered[3]:
             if segmentrow[7]:
                 parameters[5].value = segmentrow[7]
+                MergeAltered[3] = True
 ##{'json': {u'location': {u'y': 491765.18603470136, u'x': 605979.1088344229, u'spatialReference': {u'wkid': 102711, u'latestWkid': 3424}}, u'address': {u'City': u'BELMAR', u'State': u'NJ', u'Street': u'2098 Pilgrim Rd', u'ZIP': u'07719'}}, 'location': {u'y': 491765.18603470136, u'x': 605979.1088344229, u'spatialReference': {u'wkid': 102711, u'latestWkid': 3424}}, 'address number': u'2098', 'result': 'na', 'address': {u'City': u'BELMAR', u'State': u'NJ', u'Street': u'2098 Pilgrim Rd', u'ZIP': u'07719'}}
 ## lastselect example
 ##(625860, 447612, u'{0F279EE0-1708-11E3-B5F2-0062151309FF}', u'Corlies Ave', 2211, 2133, 2212, 2132, u'07753', u'07753', u'NEPTUNE', u'NEPTUNE', u'882111', u'885315', 0, 0, u'N', u'I', u'A', 400, u'B', u'PUB', u'F', u'F', u'OAXMITC', datetime.datetime(2013, 10, 4, 13, 43, 12), u'{0A1625A6-037A-4136-97D6-B43937E63A68}', (618802.6774114977, 500535.23189087445), 476.318553700763)
@@ -3826,6 +3838,11 @@ class Merge(object):
             parameters[12].clearMessage()
         if parameters[13].altered:
             parameters[13].clearMessage()
+
+        # parameters[2].setWarningMessage('Altered: {0}'.format(parameters[2].altered))
+        # parameters[3].setWarningMessage('Altered: {0}'.format(parameters[3].altered))
+
+
         return
 
     def execute(self, parameters, messages):
@@ -3852,14 +3869,10 @@ class Merge(object):
         ## ROAD.SEGMENT Parameters
         segfields['SEG_ID'] = parameters[0].valueAsText  # long integer
         segfields['PRIME_NAME'] = parameters[1].valueAsText  # text
-        if parameters[2].value:
-            segfields['ADDR_L_FR'] = parameters[2].value  # long integer
-        if parameters[3].value:
-            segfields['ADDR_L_TO'] = parameters[3].value  # long integer
-        if parameters[4].value:
-            segfields['ADDR_R_FR'] = parameters[4].value  # long integer
-        if parameters[5].value:
-            segfields['ADDR_R_TO'] = parameters[5].value  # long integer
+        segfields['ADDR_L_FR'] = parameters[2].value  # long integer
+        segfields['ADDR_L_TO'] = parameters[3].value  # long integer
+        segfields['ADDR_R_FR'] = parameters[4].value  # long integer
+        segfields['ADDR_R_TO'] = parameters[5].value  # long integer
         segfields['ZIPCODE_L'] = parameters[6].valueAsText  # text
         segfields['ZIPCODE_R'] = parameters[7].valueAsText  # text
         segfields['ZIPNAME_L'] = parameters[8].valueAsText  # text
@@ -4242,22 +4255,14 @@ class Merge(object):
             cursor = arcpy.UpdateCursor(segmentfc, nrsql)
             for row in cursor:
                 row.setValue('SEG_GUID', newGUID)
-                if segfields['ADDR_L_FR']:
-                    row.setValue('ADDR_L_FR', segfields['ADDR_L_FR'])
-                if segfields['ADDR_L_TO']:
-                    row.setValue('ADDR_L_TO', segfields['ADDR_L_TO'])
-                if segfields['ADDR_R_FR']:
-                    row.setValue('ADDR_R_FR', segfields['ADDR_R_FR'])
-                if segfields['ADDR_R_TO']:
-                    row.setValue('ADDR_R_TO', segfields['ADDR_R_TO'])
-                if segfields['ZIPCODE_L']:
-                    row.setValue('ZIPCODE_L', segfields['ZIPCODE_L'])
-                if segfields['ZIPCODE_R']:
-                    row.setValue('ZIPCODE_R', segfields['ZIPCODE_R'])
-                if segfields['ZIPNAME_L']:
-                    row.setValue('ZIPNAME_L', segfields['ZIPNAME_L'])
-                if segfields['ZIPNAME_R']:
-                    row.setValue('ZIPNAME_R', segfields['ZIPNAME_R'])
+                row.setValue('ADDR_L_FR', segfields['ADDR_L_FR'])
+                row.setValue('ADDR_L_TO', segfields['ADDR_L_TO'])
+                row.setValue('ADDR_R_FR', segfields['ADDR_R_FR'])
+                row.setValue('ADDR_R_TO', segfields['ADDR_R_TO'])
+                row.setValue('ZIPCODE_L', segfields['ZIPCODE_L'])
+                row.setValue('ZIPCODE_R', segfields['ZIPCODE_R'])
+                row.setValue('ZIPNAME_L', segfields['ZIPNAME_L'])
+                row.setValue('ZIPNAME_R', segfields['ZIPNAME_R'])
                 if segfields['MUNI_ID_L']:
                     row.setValue('MUNI_ID_L', segfields['MUNI_ID_L'])
                 if segfields['MUNI_ID_R']:
@@ -4614,7 +4619,7 @@ class MergeCleanup(object):
         ######################################################################
         addintmess = {'result': 'na', 'message': 'na', 'addrlfr': False, 'addrlto': False, 'addrrfr': False, 'addrrto': False}
 
-        if segmentrow[4] and segmentrow[5] and delrows[0][4] and delrows[0][5] and not parameters[2].altered and not parameters[3].altered:
+        if segmentrow[4] and segmentrow[5] and delrows[0][4] and delrows[0][5] and not MergeAltered[0] and not MergeAltered[1]:
 
             new_l_dir = segmentrow[5] - segmentrow[4]
             del_l_dir = delrows[0][5] - delrows[0][4]
@@ -4626,11 +4631,13 @@ class MergeCleanup(object):
                     parameters[3].value = segmentrow[5]
                     addintmess['addrlfr'] = True; addintmess['addrlto'] = True
                     merge_left_interp = True
+                    MergeAltered[0] = True; MergeAltered[1] = True
                 if segmentrow[4] < delrows[0][5]:  # newrow has the lesser addresses
                     parameters[2].value = segmentrow[4]
                     parameters[3].value = delrows[0][5]
                     addintmess['addrlfr'] = True; addintmess['addrlto'] = True
                     merge_left_interp = True
+                    MergeAltered[0] = True; MergeAltered[1] = True
 
             # left side both decreasing
             if new_l_dir < 0 and del_l_dir < 0:  # both decreasing
@@ -4639,13 +4646,15 @@ class MergeCleanup(object):
                     parameters[3].value = segmentrow[5]
                     addintmess['addrlfr'] = True; addintmess['addrlto'] = True
                     merge_left_interp = True
+                    MergeAltered[0] = True; MergeAltered[1] = True
                 if segmentrow[4] > delrows[0][5]:  # newrow has the larger addresses
                     parameters[2].value = segmentrow[4]
                     parameters[3].value = delrows[0][5]
                     addintmess['addrlfr'] = True; addintmess['addrlto'] = True
                     merge_left_interp = True
+                    MergeAltered[0] = True; MergeAltered[1] = True
 
-        if segmentrow[6] and segmentrow[7] and delrows[0][6] and delrows[0][7] and not parameters[4].altered and not parameters[5].altered:
+        if segmentrow[6] and segmentrow[7] and delrows[0][6] and delrows[0][7] and not MergeAltered[2] and not MergeAltered[3]:
 
             new_r_dir = segmentrow[7] - segmentrow[6]
             del_r_dir = delrows[0][7] - delrows[0][6]
@@ -4657,11 +4666,13 @@ class MergeCleanup(object):
                     parameters[5].value = segmentrow[7]
                     addintmess['addrrfr'] = True; addintmess['addrrto'] = True
                     merge_right_interp = True
+                    MergeAltered[2] = True; MergeAltered[3] = True
                 if segmentrow[6] < delrows[0][7]:  # newrow has the lesser addresses
                     parameters[4].value = segmentrow[6]
                     parameters[5].value = delrows[0][7]
                     addintmess['addrrfr'] = True; addintmess['addrrto'] = True
                     merge_right_interp = True
+                    MergeAltered[2] = True; MergeAltered[3] = True
 
             # right side both decreasing
             if new_r_dir < 0 and del_r_dir < 0:  # both decreasing
@@ -4670,29 +4681,30 @@ class MergeCleanup(object):
                     parameters[5].value = segmentrow[7]
                     addintmess['addrrfr'] = True; addintmess['addrrto'] = True
                     merge_right_interp = True
+                    MergeAltered[2] = True; MergeAltered[3] = True
                 if segmentrow[6] > delrows[0][7]:  # newrow has the greater addresses
                     parameters[4].value = segmentrow[6]
                     parameters[5].value = delrows[0][7]
                     addintmess['addrrfr'] = True; addintmess['addrrto'] = True
                     merge_right_interp = True
+                    MergeAltered[2] = True; MergeAltered[3] = True
 
-
-
-        if not parameters[2].altered and addintmess['addrlfr'] == False:
+        if not parameters[2].altered and not addintmess['addrlfr'] and parameters[2].value and not MergeAltered[0]:
             if segmentrow[4]:
                 parameters[2].value = segmentrow[4]
-        if not parameters[3].altered and addintmess['addrlto'] == False:
+                MergeAltered[0] = True
+        if not parameters[3].altered and not addintmess['addrlto'] and parameters[3].value and not MergeAltered[1]:
             if segmentrow[5]:
                 parameters[3].value = segmentrow[5]
-        if not parameters[4].altered and addintmess['addrrfr'] == False:
+                MergeAltered[1] = True
+        if not parameters[4].altered and not addintmess['addrrfr'] and parameters[4].value and not MergeAltered[2]:
             if segmentrow[6]:
                 parameters[4].value = segmentrow[6]
-        if not parameters[5].altered and addintmess['addrrto'] == False:
+                MergeAltered[2] = True
+        if not parameters[5].altered and not addintmess['addrrto'] and parameters[5].value and not MergeAltered[3]:
             if segmentrow[7]:
                 parameters[5].value = segmentrow[7]
-##{'json': {u'location': {u'y': 491765.18603470136, u'x': 605979.1088344229, u'spatialReference': {u'wkid': 102711, u'latestWkid': 3424}}, u'address': {u'City': u'BELMAR', u'State': u'NJ', u'Street': u'2098 Pilgrim Rd', u'ZIP': u'07719'}}, 'location': {u'y': 491765.18603470136, u'x': 605979.1088344229, u'spatialReference': {u'wkid': 102711, u'latestWkid': 3424}}, 'address number': u'2098', 'result': 'na', 'address': {u'City': u'BELMAR', u'State': u'NJ', u'Street': u'2098 Pilgrim Rd', u'ZIP': u'07719'}}
-## lastselect example
-##(625860, 447612, u'{0F279EE0-1708-11E3-B5F2-0062151309FF}', u'Corlies Ave', 2211, 2133, 2212, 2132, u'07753', u'07753', u'NEPTUNE', u'NEPTUNE', u'882111', u'885315', 0, 0, u'N', u'I', u'A', 400, u'B', u'PUB', u'F', u'F', u'OAXMITC', datetime.datetime(2013, 10, 4, 13, 43, 12), u'{0A1625A6-037A-4136-97D6-B43937E63A68}', (618802.6774114977, 500535.23189087445), 476.318553700763)
+                MergeAltered[3] = True
 
         ######################################################################
         for i in range(6,10):
@@ -4886,14 +4898,10 @@ class MergeCleanup(object):
         ## ROAD.SEGMENT Parameters
         segfields['SEG_ID'] = parameters[0].valueAsText  # long integer
         segfields['PRIME_NAME'] = parameters[1].valueAsText # text
-        if parameters[2].value:
-            segfields['ADDR_L_FR'] = parameters[2].value # long integer
-        if parameters[3].value:
-            segfields['ADDR_L_TO'] = parameters[3].value # long integer
-        if parameters[4].value:
-            segfields['ADDR_R_FR'] = parameters[4].value # long integer
-        if parameters[5].value:
-            segfields['ADDR_R_TO'] = parameters[5].value  # long integer
+        segfields['ADDR_L_FR'] = parameters[2].value # long integer
+        segfields['ADDR_L_TO'] = parameters[3].value # long integer
+        segfields['ADDR_R_FR'] = parameters[4].value # long integer
+        segfields['ADDR_R_TO'] = parameters[5].value  # long integer
         segfields['ZIPCODE_L'] = parameters[6].valueAsText # text
         segfields['ZIPCODE_R'] = parameters[7].valueAsText # text
         segfields['ZIPNAME_L'] = parameters[8].valueAsText # text
@@ -5165,22 +5173,14 @@ class MergeCleanup(object):
             cursor = arcpy.UpdateCursor(segmentfc, nrsql)
             for row in cursor:
                 #row.setValue('SEG_GUID', newGUID)
-                if segfields['ADDR_L_FR']:
-                    row.setValue('ADDR_L_FR', segfields['ADDR_L_FR'])
-                if segfields['ADDR_L_TO']:
-                    row.setValue('ADDR_L_TO', segfields['ADDR_L_TO'])
-                if segfields['ADDR_R_FR']:
-                    row.setValue('ADDR_R_FR', segfields['ADDR_R_FR'])
-                if segfields['ADDR_R_TO']:
-                    row.setValue('ADDR_R_TO', segfields['ADDR_R_TO'])
-                if segfields['ZIPCODE_L']:
-                    row.setValue('ZIPCODE_L', segfields['ZIPCODE_L'])
-                if segfields['ZIPCODE_R']:
-                    row.setValue('ZIPCODE_R', segfields['ZIPCODE_R'])
-                if segfields['ZIPNAME_L']:
-                    row.setValue('ZIPNAME_L', segfields['ZIPNAME_L'])
-                if segfields['ZIPNAME_R']:
-                    row.setValue('ZIPNAME_R', segfields['ZIPNAME_R'])
+                row.setValue('ADDR_L_FR', segfields['ADDR_L_FR'])
+                row.setValue('ADDR_L_TO', segfields['ADDR_L_TO'])
+                row.setValue('ADDR_R_FR', segfields['ADDR_R_FR'])
+                row.setValue('ADDR_R_TO', segfields['ADDR_R_TO'])
+                row.setValue('ZIPCODE_L', segfields['ZIPCODE_L'])
+                row.setValue('ZIPCODE_R', segfields['ZIPCODE_R'])
+                row.setValue('ZIPNAME_L', segfields['ZIPNAME_L'])
+                row.setValue('ZIPNAME_R', segfields['ZIPNAME_R'])
                 if segfields['MUNI_ID_L']:
                     row.setValue('MUNI_ID_L', segfields['MUNI_ID_L'])
                 if segfields['MUNI_ID_R']:
@@ -6013,9 +6013,9 @@ class LRS(object):
                     parameters[3].value = Record_lrs[3]
                 if not parameters[4].value and Record_lrs[4]:
                     parameters[4].value = Record_lrs[4]
-                if not parameters[5].value and Record_lrs[5]:
+                if not parameters[5].value and parameters[5].value != 0 and Record_lrs[5]:
                     parameters[5].value = Record_lrs[5]
-                if not parameters[6].value and Record_lrs[6]:
+                if not parameters[6].value and parameters[6].value != 0 and Record_lrs[6]:
                     parameters[6].value = Record_lrs[6]
                 if not parameters[7].value and Record_lrs[7]:
                     parameters[7].value = Record_lrs[7]
@@ -6051,9 +6051,12 @@ class LRS(object):
                     parameters[3].value = Record_lrs[3]
                 if Record_lrs[4]:
                     parameters[4].value = Record_lrs[4]
-                if Record_lrs[5]:
+                if Record_lrs[5] or Record_lrs[5] == 0:
+                    # print 'Record_lrs: {0}'.format(Record_lrs)
+                    # print 'Record_lrs[5]: {0}'.format(Record_lrs[5])
+                    # print 'type: {0}'.format(type(Record_lrs[5]))
                     parameters[5].value = Record_lrs[5]
-                if Record_lrs[6]:
+                if Record_lrs[6] or Record_lrs[6] == 0:
                     parameters[6].value = Record_lrs[6]
                 if Record_lrs[7]:
                     parameters[7].value = Record_lrs[7]
@@ -6062,27 +6065,13 @@ class LRS(object):
         ########################################################################
         ## SLD_ROUTE
 
-#                                                  ["SRI",  "ROUTE_TYPE_ID", "SLD_NAME", "SLD_COMMENT", "SLD_DIRECTION", "SIGN_NAME","GLOBALID"], sri_sql) as cursor2:
-# self.Records_sld.append(['Record {0}'.format(gg),row[0],       row[1],        row[2],      row[3],         row[4],       row[5]])
-#                                      0               1               2               3           4               5           6
+        #                                                  ["SRI",  "ROUTE_TYPE_ID", "SLD_NAME", "SLD_COMMENT", "SLD_DIRECTION", "SIGN_NAME","GLOBALID"], sri_sql) as cursor2:
+        # self.Records_sld.append(['Record {0}'.format(gg),row[0],       row[1],        row[2],      row[3],         row[4],       row[5]])
+        #                                      0               1               2               3           4               5           6
 
         #print('SLD updateParameters1 \n  Records_sld: {0} \n  param8.values: {1} \n  param8.altered: {2}\n  self.Records_sld: {3}\n  RecordsCleared_sld: {4}'.format(Records_sld, parameters[8].values, parameters[8].altered, self.Records_sld, RecordsCleared_sld))
 
-##
-##
-##        if not parameters[8].values and RecordsCleared_sld['sri'] == self.sri and RecordsCleared_sld['altered'] and self.Records_sld:
-##            RecordsCleared_sld['status'] = (self.sri,True)
-##            #print("SLD 0")
-##        elif not parameters[8].altered and self.Records_sld and not RecordsCleared_sld['status'][1] and not Records_sld: # and not Records: # first time around
-##            parameters[8].values = self.Records_sld
-##            Records_sld = self.Records_sld
-##            #print("SLD 1")
-##        else:
-##            Records_sld = parameters[8].values
-##            parameters[8].values = Records_sld
-##            #print("SLD 2")
-
-#[['Record 1', u'15000085__', 6, u'OCEAN COUNTY 85', u'Ocean County Ref # 85', u'North to South', u'Western Boulevard']]
+        #[['Record 1', u'15000085__', 6, u'OCEAN COUNTY 85', u'Ocean County Ref # 85', u'North to South', u'Western Boulevard']]
 
         if not Records_sld and not self.Records_sld:
             Records_sld = [['Record 1', '', None, '', '', '', '']]
@@ -7812,12 +7801,38 @@ class EditNames(object):
 
         # ----------------------------------------------------------------------
         # Make sure the name type/ranks are valid
+        L1H1 = [False]*2
         if parameters[0].values:
             Rchecks = parameters[0].values
             ntr = []; err = False
             for Rcheck in Rchecks:
                 ntr.append(Rcheck[2] + str(Rcheck[3]))
-            for i,v in enumerate(ntr):
+                if Rcheck[2] == 'L' and str(Rcheck[3]) == '1':
+                    L1H1[0] = True
+                if Rcheck[2] == 'H' and str(Rcheck[3]) == '1':
+                    L1H1[1] = True
+
+            if not L1H1[0] and not L1H1[1]:
+                parameters[0].setErrorMessage("Missing L1 and/or H1 Name Record")
+
+            if (not L1H1[0] and L1H1[1]) and ('L2' or 'L3' or 'L4' or 'L5' or 'L6' or 'L7' or 'L8' in ntr):
+                parameters[0].setErrorMessage("Missing L1 and/or H1 Name Record")
+
+            ntrsort = sorted(ntr, reverse=True)
+            ntrsortlen = len(ntrsort)
+            for i, v in enumerate(ntrsort):
+                if i == ntrsortlen-1:
+                    if v[1] != '1' if len(v) == 2 else False:
+                        missing = v[0] + '1'
+                        parameters[0].setErrorMessage("Rank Error: Missing {0} Record".format(missing))
+                    break
+                if v[0] == ntrsort[i+1][0]:
+                    if (int(v[1]) - 1) != int(ntrsort[i+1][1]):
+                        missing = v[0] + str(int(v[1]) - 1)
+                        parameters[0].setErrorMessage("Rank Error: Missing {0} Record".format(missing))
+
+
+            for i, v in enumerate(ntr):
                 if ntr.count(v) > 1:
                     parameters[0].setErrorMessage("Duplicate {0} Records".format(v))
                     err = True
@@ -7828,6 +7843,8 @@ class EditNames(object):
                     parameters[0].setErrorMessage('ID must be formatted like: Record 1, Record 2, etc.')
                     err = True
                     break
+            # check for missing L1 or H1
+
             if not err:
                 parameters[0].clearMessage()
 
@@ -8048,16 +8065,6 @@ class EditNames(object):
                     else:
                         arcpy.AddError('Missing Required Fields. Required fields are; SEG_GUID, NAME_TYPE_ID, RANK, NAME_FULL, NAME, and DATA_SRC_TYPE_ID.')
 
-
-##        arcpy.AddMessage('\n____________________________________________________\nSummary Variables')
-##        arcpy.AddMessage('\nselfRecords values {0}'.format(self.Records))
-##        arcpy.AddMessage('\nRecordsDict values {0}'.format(self.RecordsDict))
-##        arcpy.AddMessage('\nparameters[0].values or RecordsValues values {0}'.format(parameters[0].values))
-##        arcpy.AddMessage('\nRecords values {0}'.format(Records))
-##        arcpy.AddMessage('\n____________________________________________________\nBuilding PRIME_NAME...\n')
-
-        #-----------------------------------------------------------------------
-        #-----------------------------------------------------------------------
         #-----------------------------------------------------------------------
         # PRIME_NAME
 
@@ -8071,122 +8078,134 @@ class EditNames(object):
                 with arcpy.da.SearchCursor(segnametab, "*", seg_sql2) as cursor:  # insert a cursor to access fields, print names
                     for row in cursor:
                         segname_current.append(row)
-                if segname_current == []:
+                if segname_current == []: # no records in segname. PRIME_NAME should be removed if there is one.
                     Records = []; Record = []; currentR = ""; RecordsCleared['status'] = ('',False)
-                    arcpy.AddError("BUILD NAME: There are no current records in SEG_NAME for this segment")
-                    sys.exit('Error: Insert 3')
+                    arcpy.AddWarning("PRIME NAME: There are no current records in SEG_NAME for this segment. If there is a record in SEGMENT.PRIME_NAME, it will be deleted.")
 
+                    ## Update the record in SEGMENT
+                    cursor = arcpy.UpdateCursor(segmentfc, seg_sql2)
+                    for row in cursor:
+                        if row.getValue("PRIME_NAME"):
+                            currv = row.getValue("PRIME_NAME")
+                            row.setValue("PRIME_NAME", None)
+                            cursor.updateRow(row)
+                            arcpy.AddWarning("\nPRIME_NAME successfully updated from {0} to {1}".format(currv ,'<null>'))
+                        else:
+                            arcpy.AddWarning('\nPRIME_NAME was not updated because it is already <null>. No need to update.')
+                    del row, cursor
 
-                ################################################################################
-                ## Evaluate the available SEG_NAMES, then make a decision about what to insert into SEGMENT PRIME_NAME
-                ij = 0
-                ranktoken = np.zeros((len(segname_current),13), dtype=np.int)
-                for record in segname_current:
-                    if record[3] == 'L' and record[4] == 1:
-                        ranktoken[ij][0] = 1
-                    elif record[3] == 'L' and record[4] == 2:
-                        ranktoken[ij][1] = 1
-                    elif record[3] == 'L' and record[4] == 3:
-                        ranktoken[ij][2] = 1
-                    elif record[3] == 'L' and record[4] == 4:
-                        ranktoken[ij][3] = 1
-                    elif record[3] == 'L' and record[4] == 5:
-                        ranktoken[ij][4] = 1
-                    elif record[3] == 'L' and record[4] == 6:
-                        ranktoken[ij][5] = 1
-                    elif record[3] == 'H' and record[4] == 1:
-                        ranktoken[ij][6] = 1
-                    elif record[3] == 'H' and record[4] == 2:
-                        ranktoken[ij][7] = 1
-                    elif record[3] == 'H' and record[4] == 3:
-                        ranktoken[ij][8] = 1
-                    elif record[3] == 'H' and record[4] == 4:
-                        ranktoken[ij][9] = 1
-                    elif record[3] == 'H' and record[4] == 5:
-                        ranktoken[ij][10] = 1
-                    elif record[3] == 'H' and record[4] == 6:
-                        ranktoken[ij][11] = 1
-                    else:
-                        ranktoken[ij][12] = 1
-                    ij += 1
+                else: # there is a name record
 
-                ##########################################
-                ## 3.2) Find l1 or H1, if none throw error
-                # iterate through column zero to find if there are any L1
-                chosenone = None
-                if sum(ranktoken[:,0]) == 1:
-                    bb = 0
-                    for rr in ranktoken[:,0]:
-                        if rr == 1:
-                            chosenone = bb
-                        bb += 1
-                else:
-                    if sum(ranktoken[:,6]) == 1:
+                    ################################################################################
+                    ## Evaluate the available SEG_NAMES, then make a decision about what to insert into SEGMENT PRIME_NAME
+                    ij = 0
+                    ranktoken = np.zeros((len(segname_current),13), dtype=np.int)
+                    for record in segname_current:
+                        if record[3] == 'L' and record[4] == 1:
+                            ranktoken[ij][0] = 1
+                        elif record[3] == 'L' and record[4] == 2:
+                            ranktoken[ij][1] = 1
+                        elif record[3] == 'L' and record[4] == 3:
+                            ranktoken[ij][2] = 1
+                        elif record[3] == 'L' and record[4] == 4:
+                            ranktoken[ij][3] = 1
+                        elif record[3] == 'L' and record[4] == 5:
+                            ranktoken[ij][4] = 1
+                        elif record[3] == 'L' and record[4] == 6:
+                            ranktoken[ij][5] = 1
+                        elif record[3] == 'H' and record[4] == 1:
+                            ranktoken[ij][6] = 1
+                        elif record[3] == 'H' and record[4] == 2:
+                            ranktoken[ij][7] = 1
+                        elif record[3] == 'H' and record[4] == 3:
+                            ranktoken[ij][8] = 1
+                        elif record[3] == 'H' and record[4] == 4:
+                            ranktoken[ij][9] = 1
+                        elif record[3] == 'H' and record[4] == 5:
+                            ranktoken[ij][10] = 1
+                        elif record[3] == 'H' and record[4] == 6:
+                            ranktoken[ij][11] = 1
+                        else:
+                            ranktoken[ij][12] = 1
+                        ij += 1
+
+                    ##########################################
+                    ## 3.2) Find l1 or H1, if none throw error
+                    # iterate through column zero to find if there are any L1
+                    chosenone = None
+                    if sum(ranktoken[:,0]) == 1:
                         bb = 0
-                        for rr in ranktoken[:,6]:
+                        for rr in ranktoken[:,0]:
                             if rr == 1:
                                 chosenone = bb
                             bb += 1
-
-                if chosenone == None:
-                    # build a dictionary to hold errors for the anlysis of current names
-                    nameerr = {0: '\nBUILD NAMES ERROR: There is one or more Local/Rank 2 records, with no Local/Rank 1 record in SEG_NAME',
-                    1: '\nBUILD NAMES ERROR: There is one or more Highway/Rank 2 records, with no Highway/Rank 1 record in SEG_NAME',
-                    2: '\nBUILD NAMES ERROR: There is one or more Highway/Rank 3 records, with no Highway/Rank 2 record in SEG_NAME',
-                    3: '\nBUILD NAMES ERROR: There is one or more Highway/Rank 3 records, with no Highway/Rank 1 record in SEG_NAME',
-                    4: '\nBUILD NAMES ERROR: There is more than 1 Local/Rank 1 record in SEG_NAME',
-                    5: '\nBUILD NAMES ERROR: There is more than 1 Highway/Rank 1 record in SEG_NAME',
-                    6: '\nBUILD NAMES ERROR: In 1 or more records, there is a value other than L/1, L/2, H/1, H/2, H/3'}
-                    errcollector = []
-                    if sum(ranktoken[:,1]) >= 1 and sum(ranktoken[:,0]) == 0: # there is one or more L2, with no L1
-                        errcollector.append(0)
-                    if sum(ranktoken[:,3]) >= 1 and sum(ranktoken[:,2]) == 0: # there is one or more H2, with no H1
-                        errcollector.append(1)
-                    if sum(ranktoken[:,4]) >= 1 and sum(ranktoken[:,3]) == 0: # there is one or more H3, with no H2
-                        errcollector.append(2)
-                    if sum(ranktoken[:,4]) >= 1 and sum(ranktoken[:,2]) == 0: # there is one or more H3, with no H1
-                        errcollector.append(3)
-                    if sum(ranktoken[:,0]) > 0: # there is more than 1 L1
-                        errcollector.append(4)
-                    if sum(ranktoken[:,2]) > 0: # there is more than 1 H1
-                        errcollector.append(5)
-                    if sum(ranktoken[:,5]) > 0: # some other value in than L1, l2, h1, h2, h3 in one of the records
-                        errcollector.append(6)
-                    arcpy.AddMessage("BUILD NAMES: errcollector print out: {0}, ranktoken: {1}".format(errcollector,ranktoken))
-                    if len(errcollector) > 0:
-                        for erc in range(0,(len(errcollector))):
-                            if erc == 0:
-                                mess = nameerr[errcollector[erc]]
-                            if erc > 0:
-                                mess = mess + nameerr[errcollector[erc]]
-                    Records = []; Record = []; currentR = ""; RecordsCleared['status'] = ('',False)
-                    arcpy.AddError("BUILD NAMES ERROR: No valid L1 or H1 in SEG_NAME, and..." + mess)
-
-                ##########################################
-                ## Construct the PRIME NAME entry
-                namelist = segname_current[chosenone][6:13]
-                #arcpy.AddMessage("ADD NAME: The chosen one is index {0}, and the attribs are {1}".format(chosenone,namelist))
-                primecatclass = erebus.FullName(namelist[0],namelist[1],namelist[2],namelist[3],namelist[4],namelist[5],namelist[6])
-                primename = primecatclass.concatenate()
-
-                try:
-                    arcpy.AddMessage("\nPrime Name construction resulted in: {0}".format(primename))
-                except:
-                    Records = []; Record = []; currentR = ""; RecordsCleared['status'] = ('',False)
-                    arcpy.AddError("\nPrime Name construction failed")
-
-                ##########################################
-                ## 3.4) Update the record in SEGMENT
-                cursor = arcpy.UpdateCursor(segmentfc, seg_sql2)
-                for row in cursor:
-                    if row.getValue("PRIME_NAME") != primename:
-                        currv = row.getValue("PRIME_NAME")
-                        row.setValue("PRIME_NAME", primename)
-                        cursor.updateRow(row)
-                        arcpy.AddMessage("\nPRIME_NAME successfully updated from {0} to {1}".format(currv ,primename))
                     else:
-                        arcpy.AddWarning('\nPRIME_NAME was not updated because it is already the same as NAME_FULL. No need to update.')
-                del row, cursor
+                        if sum(ranktoken[:,6]) == 1:
+                            bb = 0
+                            for rr in ranktoken[:,6]:
+                                if rr == 1:
+                                    chosenone = bb
+                                bb += 1
+
+                    if chosenone == None:
+                        # build a dictionary to hold errors for the anlysis of current names
+                        nameerr = {0: '\nBUILD NAMES ERROR: There is one or more Local/Rank 2 records, with no Local/Rank 1 record in SEG_NAME',
+                        1: '\nBUILD NAMES ERROR: There is one or more Highway/Rank 2 records, with no Highway/Rank 1 record in SEG_NAME',
+                        2: '\nBUILD NAMES ERROR: There is one or more Highway/Rank 3 records, with no Highway/Rank 2 record in SEG_NAME',
+                        3: '\nBUILD NAMES ERROR: There is one or more Highway/Rank 3 records, with no Highway/Rank 1 record in SEG_NAME',
+                        4: '\nBUILD NAMES ERROR: There is more than 1 Local/Rank 1 record in SEG_NAME',
+                        5: '\nBUILD NAMES ERROR: There is more than 1 Highway/Rank 1 record in SEG_NAME',
+                        6: '\nBUILD NAMES ERROR: In 1 or more records, there is a value other than L/1, L/2, H/1, H/2, H/3'}
+                        errcollector = []
+                        if sum(ranktoken[:,1]) >= 1 and sum(ranktoken[:,0]) == 0: # there is one or more L2, with no L1
+                            errcollector.append(0)
+                        if sum(ranktoken[:,3]) >= 1 and sum(ranktoken[:,2]) == 0: # there is one or more H2, with no H1
+                            errcollector.append(1)
+                        if sum(ranktoken[:,4]) >= 1 and sum(ranktoken[:,3]) == 0: # there is one or more H3, with no H2
+                            errcollector.append(2)
+                        if sum(ranktoken[:,4]) >= 1 and sum(ranktoken[:,2]) == 0: # there is one or more H3, with no H1
+                            errcollector.append(3)
+                        if sum(ranktoken[:,0]) > 0: # there is more than 1 L1
+                            errcollector.append(4)
+                        if sum(ranktoken[:,2]) > 0: # there is more than 1 H1
+                            errcollector.append(5)
+                        if sum(ranktoken[:,5]) > 0: # some other value in than L1, l2, h1, h2, h3 in one of the records
+                            errcollector.append(6)
+                        arcpy.AddMessage("BUILD NAMES: errcollector print out: {0}, ranktoken: {1}".format(errcollector,ranktoken))
+                        if len(errcollector) > 0:
+                            for erc in range(0,(len(errcollector))):
+                                if erc == 0:
+                                    mess = nameerr[errcollector[erc]]
+                                if erc > 0:
+                                    mess = mess + nameerr[errcollector[erc]]
+                        Records = []; Record = []; currentR = ""; RecordsCleared['status'] = ('',False)
+                        arcpy.AddError("BUILD NAMES ERROR: No valid L1 or H1 in SEG_NAME, and..." + mess)
+
+                    ##########################################
+                    ## Construct the PRIME NAME entry
+                    namelist = segname_current[chosenone][6:13]
+                    #arcpy.AddMessage("ADD NAME: The chosen one is index {0}, and the attribs are {1}".format(chosenone,namelist))
+                    primecatclass = erebus.FullName(namelist[0],namelist[1],namelist[2],namelist[3],namelist[4],namelist[5],namelist[6])
+                    primename = primecatclass.concatenate()
+
+                    try:
+                        arcpy.AddMessage("\nPrime Name construction resulted in: {0}".format(primename))
+                    except:
+                        Records = []; Record = []; currentR = ""; RecordsCleared['status'] = ('',False)
+                        arcpy.AddError("\nPrime Name construction failed")
+
+                    ##########################################
+                    ## 3.4) Update the record in SEGMENT
+                    cursor = arcpy.UpdateCursor(segmentfc, seg_sql2)
+                    for row in cursor:
+                        if row.getValue("PRIME_NAME") != primename:
+                            currv = row.getValue("PRIME_NAME")
+                            row.setValue("PRIME_NAME", primename)
+                            cursor.updateRow(row)
+                            arcpy.AddMessage("\nPRIME_NAME successfully updated from {0} to {1}".format(currv ,primename))
+                        else:
+                            arcpy.AddWarning('\nPRIME_NAME was not updated because it is already the same as NAME_FULL. No need to update.')
+                    del row, cursor
 
             except:
                 Records = []; Record = []; currentR = ""; RecordsCleared['status'] = ('',False)

@@ -1,68 +1,30 @@
-<ESRI.Configuration xmlns="http://schemas.esri.com/Desktop/AddIns" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-    <Name>NJ Road Editor</Name>
-    <AddInID>{cdc19deb-157a-48ad-97de-f0d5c0658e4e}</AddInID>
-    <Description>Contains tools to edit NJ roads data.</Description>
-    <Version>3.1.0</Version>
-    <Image>Images\gis_logo_stack.jpg</Image>
-    <Author>NJ OGIS</Author>
-    <Company>NJ OIT OGIS</Company>
-    <Date>12/14/2015</Date>
-    <Targets>
-        <Target name="Desktop" version="10.3" />
-    </Targets>
-    <AddIn language="PYTHON" library="Roads_addin.py" namespace="Roads_addin">
-        <ArcMap>
-            <Commands>
-                <Button caption="Delete Segment" category="NJ Road Editor" class="ButtonClass10" id="Roads_addin.buttonDel" image="Images\del3.png" message="Select 1 segment and press the delete button. Segment will be deleted from all related tables. If there is no record in SEGMENT_CHANGE, a record will be inserted" tip="Delete Segment"><Help heading="Help Heading" /></Button>
-                <Button caption="Edit Names" category="NJ Road Editor" class="ButtonClass8" id="Roads_addin.buttonAddName" image="Images\nameT.png" message="Select 1 segment in ROAD.SEGMENT and click the button. User will be able to insert, update, and delete records in SEG_NAME and SEG_SHIELD" tip="Edit Names"><Help heading="Help Heading" /></Button>
-                <Button caption="Edit LRS Records" category="NJ Road Editor" class="ButtonClass9" id="Roads_addin.buttonLRS" image="Images\lrs7T.png" message="Select 1 segment in ROAD.SEGMENT and click the button. The AddLRS tool will launch and enable the user to delete, update, or insert LINEAR_REF records and/or SLD_ROUTE records." tip="LRS"><Help heading="Help Heading" /></Button>
-                <Button caption="Edit Segment Record" category="NJ Road Editor" class="ButtonClass43" id="Roads_addin.buttonEditSegment" image="Images\editsegment.png" message="Select 1 segment in SEGMENT and click the button to edit the attributes of an existing SEGMENT record." tip="Edit Segment"><Help heading="Help Heading" /></Button>
-                <Button caption="Batch Build Name" category="NJ Road Editor" class="ButtonClass13" id="Roads_addin.buttonBatchBuildName" image="Images\batchbuild.png" message="The BatchBuildName tool builds the NAME_FULL field in SEG_NAME, and the PRIME_NAME field in SEGMENT. The tool chooses the name with the lowest RANK/NAME_TYPE_ID" tip="BatchBuildName"><Help heading="Help Heading" /></Button>
-                <Button caption="Batch Post and Reconcile" category="NJ Road Editor" class="ButtonClass73" id="Roads_addin.buttonBatchPost" image="Images\recandpost.png" message="The BatchPost tool will post and reconcile versions, rebuild indices, and delete the versions." tip="BatchPost"><Help heading="Help Heading" /></Button>
-                <Button caption="About" category="NJ Road Editor" class="ButtonClass32" id="Roads_addin.buttonAbout" image="Images\about.png" message="About the Python Add-In" tip="About"><Help heading="Help Heading" /></Button>
-                <Button caption="NJRE Manual" category="NJ Road Editor" class="ButtonClass332" id="Roads_addin.buttonDocumentation" image="Images\book.png" message="Documentation for the NJ Road Editor Add-In. Launches the .pdf manual." tip="About"><Help heading="Help Heading" /></Button>
-                <Button caption="Roads Data Model" category="NJ Road Editor" class="ButtonClass337" id="Roads_addin.buttonDataModel" image="Images\book.png" message="NJ Road Centerlines Maintenence Data Model. Launches a PDF." tip="About"><Help heading="Help Heading" /></Button>
-                <Button caption="Global Change SRI" category="NJ Road Editor" class="ButtonClass701" id="Roads_addin.buttonChangeSRI" image="Images\book.png" message="MBI Global Update of SRI SLD_ROUTE and LINEAR_REF tables." tip="ChangeSRI"><Help heading="Help Heading" /></Button>
-            </Commands>
-            <Extensions>
-                <Extension
-                    autoLoad="true"
-                    category="NJ Road Editor"
-                    class="ExtensionClass1"
-                    description="NJ Road Editor Add-In Extension"
-                    id="Roads_addin.extension1"
-                    name="NJ Road Editor Extension"
-                    productName="NJ Road Editor Extension"
-                    showInExtensionDialog="true" />
-            </Extensions>
-            <Toolbars>
-                <Toolbar caption="NJ Road Editor Toolbar" category="NJ Road Editor" id="roads_addin.toolbar" showInitially="true">
-                    <Items>
-                        <Menu refID="Roads_addin.menu_1" />
-                        <Button refID="Roads_addin.buttonEditSegment" />
-                        <Button refID="Roads_addin.buttonAddName" />
-                        <Button refID="Roads_addin.buttonLRS" />
-                        <Button refID="Roads_addin.buttonDel" />
-                        <Menu refID="Roads_addin.menu_mbi" />
-                    </Items>
-                </Toolbar>
-            </Toolbars>
-            <Menus>
-                <Menu caption="NJRE" category="NJ Road Editor" id="Roads_addin.menu_1" isRootMenu="false" isShortcutMenu="true" separator="true">
-                    <Items>
-                        <Button refID="Roads_addin.buttonBatchBuildName" />
-                        <Button refID="Roads_addin.buttonBatchPost" />
-                        <Button refID="Roads_addin.buttonAbout" />
-                        <Button refID="Roads_addin.buttonDocumentation" />
-                        <Button refID="Roads_addin.buttonDataModel" />
-                    </Items>
-                </Menu>
-                <Menu caption="SLD Manager" category="NJ Road Editor" id="Roads_addin.menu_mbi" isRootMenu="false" separator="true">
-                    <Items>
-                        <Button refID="Roads_addin.buttonChangeSRI" />
-                    </Items>
-                </Menu>
-            </Menus>
-        </ArcMap>
-    </AddIn>
+<ESRI.Configuration xmlns="http://schemas.esri.com/Desktop/AddIns" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><Name>NJ Road Editor</Name><AddInID>{cdc19deb-157a-48ad-97de-f0d5c0658e4e}</AddInID><Description>Contains tools to edit NJ roads data.</Description><Version>3.1.1</Version><Image>Images\gis_logo_stack.jpg</Image><Author>NJ OGIS</Author><Company>NJ OIT OGIS</Company><Date>12/31/2015</Date><Targets><Target name="Desktop" version="10.3" /></Targets><AddIn language="PYTHON" library="Roads_addin.py" namespace="Roads_addin"><ArcMap>
+    <Commands>
+        <Button caption="Delete Segment" category="NJ Road Editor" class="ButtonClass10" id="Roads_addin.buttonDel" image="Images\del3.png" message="Select 1 segment and press the delete button. Segment will be deleted from all related tables. If there is no record in SEGMENT_CHANGE, a record will be inserted" tip="Delete Segment"><Help heading="Help Heading" /></Button>
+        <Button caption="Edit Names" category="NJ Road Editor" class="ButtonClass8" id="Roads_addin.buttonAddName" image="Images\nameT.png" message="Select 1 segment in ROAD.SEGMENT and click the button. User will be able to insert, update, and delete records in SEG_NAME and SEG_SHIELD" tip="Edit Names"><Help heading="Help Heading" /></Button>
+				<Button caption="Edit LRS Records" category="NJ Road Editor" class="ButtonClass9" id="Roads_addin.buttonLRS" image="Images\lrs7T.png" message="Select 1 segment in ROAD.SEGMENT and click the button. The AddLRS tool will launch and enable the user to delete, update, or insert LINEAR_REF records and/or SLD_ROUTE records." tip="LRS"><Help heading="Help Heading" /></Button>
+				<Button caption="Edit Segment Record" category="NJ Road Editor" class="ButtonClass43" id="Roads_addin.buttonEditSegment" image="Images\editsegment.png" message="Select 1 segment in SEGMENT and click the button to edit the attributes of an existing SEGMENT record." tip="Edit Segment"><Help heading="Help Heading" /></Button>
+				<Button caption="Batch Build Name" category="NJ Road Editor" class="ButtonClass13" id="Roads_addin.buttonBatchBuildName" image="Images\batchbuild.png" message="The BatchBuildName tool builds the NAME_FULL field in SEG_NAME, and the PRIME_NAME field in SEGMENT. The tool chooses the name with the lowest RANK/NAME_TYPE_ID" tip="BatchBuildName"><Help heading="Help Heading" /></Button>
+        <Button caption="Batch Post and Reconcile" category="NJ Road Editor" class="ButtonClass73" id="Roads_addin.buttonBatchPost" image="Images\recandpost.png" message="The BatchPost tool will post and reconcile versions, rebuild indices, and delete the versions." tip="BatchPost"><Help heading="Help Heading" /></Button>
+        <Button caption="About" category="NJ Road Editor" class="ButtonClass32" id="Roads_addin.buttonAbout" image="Images\about.png" message="About the Python Add-In" tip="About"><Help heading="Help Heading" /></Button>
+				<Button caption="NJRE Manual" category="NJ Road Editor" class="ButtonClass332" id="Roads_addin.buttonDocumentation" image="Images\book.png" message="Documentation for the NJ Road Editor Add-In. Launches the .pdf manual." tip="About"><Help heading="Help Heading" /></Button>
+				<Button caption="Roads Data Model" category="NJ Road Editor" class="ButtonClass337" id="Roads_addin.buttonDataModel" image="Images\book.png" message="NJ Road Centerlines Maintenence Data Model. Launches a PDF." tip="About"><Help heading="Help Heading" /></Button>
+        <Button caption="Global Change SRI" category="NJ Road Editor" class="ButtonClass701" id="Roads_addin.buttonChangeSRI" image="Images\book.png" message="MBI Global Update of SRI SLD_ROUTE and LINEAR_REF tables." tip="ChangeSRI"><Help heading="Help Heading" /></Button>
+        </Commands>
+    <Extensions>
+        <Extension autoLoad="true" category="NJ Road Editor" class="ExtensionClass1" description="NJ Road Editor Add-In Extension" id="Roads_addin.extension1" name="NJ Road Editor Extension" productName="NJ Road Editor Extension" showInExtensionDialog="true" />
+    </Extensions>
+    <Toolbars>
+        <Toolbar caption="NJ Road Editor Toolbar" category="NJ Road Editor" id="roads_addin.toolbar" showInitially="true"><Items><Menu refID="Roads_addin.menu_1" /><Button refID="Roads_addin.buttonEditSegment" /><Button refID="Roads_addin.buttonAddName" /><Button refID="Roads_addin.buttonLRS" /><Button refID="Roads_addin.buttonDel" /><Menu refID="Roads_addin.menu_mbi" /></Items></Toolbar>
+        </Toolbars>
+    <Menus>
+        <Menu caption="NJRE" category="NJ Road Editor" id="Roads_addin.menu_1" isRootMenu="false" isShortcutMenu="true" separator="true"><Items><Button refID="Roads_addin.buttonBatchBuildName" /><Button refID="Roads_addin.buttonBatchPost" /><Button refID="Roads_addin.buttonAbout" /><Button refID="Roads_addin.buttonDocumentation" /><Button refID="Roads_addin.buttonDataModel" /></Items></Menu>
+        <Menu caption="SLD Manager" category="NJ Road Editor" id="Roads_addin.menu_mbi" isRootMenu="false" separator="true">
+            <Items>
+                <Button refID="Roads_addin.buttonChangeSRI" />
+            </Items>
+        </Menu>
+    </Menus>
+    </ArcMap>
+</AddIn>
 </ESRI.Configuration>

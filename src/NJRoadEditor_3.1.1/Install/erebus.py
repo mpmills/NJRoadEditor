@@ -519,21 +519,28 @@ class UpdateCopy(object):
             #check for true curves in the JSON
             if 'curvePaths' in ge1.keys():
                 # format for true curves
-                xym1 = []; xym2 = [];
+                xym1 = []
                 for i in ge1['curvePaths'][0]:
                     if type(i) is list:
                         xym1.append(i)
                     elif type(i) is dict:
                         xym1.append(i['c'][0])
+            elif 'paths' in ge1.keys():
+                #format for no true curves
+                # find the matching vertices
+                xym1 = ge1['paths'][0] # list of lists. each list has [x,y,m]
+
+            if 'curvePaths' in ge2.keys():
+                # format for true curves
+                xym2 = []
                 for i in ge2['curvePaths'][0]:
                     if type(i) is list:
                         xym2.append(i)
                     elif type(i) is dict:
                         xym2.append(i['c'][0])
-            elif 'paths' in ge1.keys():
+            elif 'paths' in ge2.keys():
                 #format for no true curves
                 # find the matching vertices
-                xym1 = ge1['paths'][0] # list of lists. each list has [x,y,m]
                 xym2 = ge2['paths'][0]
 
 
@@ -987,20 +994,26 @@ def bisect_points(ge1, ge2, droplength = 10, plot = False):
 
         if 'curvePaths' in ge1.keys():
             # format for true curves
-            xym1 = []; xym2 = [];
+            xym1 = []
             for i in ge1['curvePaths'][0]:
                 if type(i) is list:
                     xym1.append(i)
                 elif type(i) is dict:
                     xym1.append(i['c'][0])
+        elif 'paths' in ge1.keys():
+            #format for no true curves
+            xym1 = ge1['paths'][0] # list of lists. each list has [x,y,m]
+
+        if 'curvePaths' in ge2.keys():
+            # format for true curves
+            xym2 = []
             for i in ge2['curvePaths'][0]:
                 if type(i) is list:
                     xym2.append(i)
                 elif type(i) is dict:
                     xym2.append(i['c'][0])
-        elif 'paths' in ge1.keys():
+        elif 'paths' in ge2.keys():
             #format for no true curves
-            xym1 = ge1['paths'][0] # list of lists. each list has [x,y,m]
             xym2 = ge2['paths'][0]
 
         l1 = len(xym1) - 1; l2 = len(xym2) - 1
