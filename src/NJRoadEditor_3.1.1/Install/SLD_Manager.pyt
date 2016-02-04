@@ -34,7 +34,7 @@ os.sys.path.append(os.path.dirname(__file__))
 
 # This function determines your database and how the name should be formatted
 def getlongnames(workspace, names):
-    #workspace_type = 'sde'
+    # workspace_type = 'sde'
     workspace_type = arcpy.env.workspace.split(".")[-1]
     if workspace_type == 'sde':
         try:
@@ -43,8 +43,8 @@ def getlongnames(workspace, names):
             conn = desc.connectionProperties
 
             inst = conn.instance
-            ss = re.search('sql',inst, re.I)
-            ora = re.search('oracle',inst, re.I)
+            ss = re.search('sql', inst, re.I)
+            ora = re.search('oracle', inst, re.I)
             longnames = {}
             if ss:
                 gdb = conn.database
@@ -92,7 +92,9 @@ except:
     arcpy.MessageAdd("There was an error identifing a table.")
     # pass
 
+
 class Toolbox(object):
+
     def __init__(self):
         """Define the toolbox (the name of the toolbox is the name of the
         .pyt file)."""
@@ -201,7 +203,7 @@ class ChangeSRI(object):
                     with arcpy.da.SearchCursor(
                         in_table=sldroutetab,
                         field_names=["SRI"],
-                        where_clause="SRI='"+ parameters[0].value +"'"
+                        where_clause="SRI='" + parameters[0].value + "'"
                     ) as c_segment:
 
                         sri_is_valid = False
@@ -258,10 +260,11 @@ class ChangeSRI(object):
 
         """The source code of the tool."""
 
-        import arcpy, os, sys
+        import arcpy
+        import os
         import traceback
+
         os.sys.path.append(os.path.dirname(__file__))
-        import erebus
 
         # load Route Type Domain Values
         route_domain_values = [d for d in arcpy.da.ListDomains(arcpy.env.workspace) if d.name == 'ROUTE_TYPE'][0].codedValues
@@ -289,9 +292,9 @@ class ChangeSRI(object):
         # sldroutetab    - sld route table
         # linreftab - linear ref table
       
-        ###
-        ###     SRI Updates to the SLD_ROUTE table
-        ###
+        # ##
+        # ##     SRI Updates to the SLD_ROUTE table
+        # ##
 
         # retain all messages for the sld_route updates
         messages_sldroute = []
@@ -343,9 +346,9 @@ class ChangeSRI(object):
             # add summary message for SLD_ROUTE table updates.
             arcpy.AddMessage("\nSRI updated for " + str(count_sldroute_update) + " record" + ("s" if count_sldroute_update > 1 else "") + " in SLD_ROUTE.\n" + "\n".join(messages_sldroute))
         
-        ###
-        ###     SRI Updates to the LINEAR_REF table
-        ###
+        #
+        #     SRI Updates to the LINEAR_REF table
+        #
 
         # retain all messages for the linear_ref updates
         messages_linref = []

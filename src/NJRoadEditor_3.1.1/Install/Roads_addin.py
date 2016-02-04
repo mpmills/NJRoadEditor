@@ -649,10 +649,8 @@ class ButtonClass701(object):
         # global NJRE_logger - consider using existing logging functionality?
 
     def onClick(self):
-        print "where is the button!!"
         global tbx_mbi_sld_manager
         try:
-            # pythonaddins.MessageBox('MBI Global Update of SRI', 'MBI Change SRI', 0)
             pythonaddins.GPToolDialog(tbx_mbi_sld_manager, "ChangeSRI")
             # arcpy.RefreshActiveView()
         except Exception as ex:
@@ -660,7 +658,6 @@ class ButtonClass701(object):
             print trace
             print "error:" + ex.message
             # arcpy.AddMessage("something went wrong." + ex.message)
-
 
 #------------------------------------------------------------------------------
 # EXTENSION - NJ ROAD EDITOR EXTENSION
