@@ -471,12 +471,8 @@ class RemilepostRoute(object):
 
         if parameters[0].value:
             parameters[1].enabled = True
-
-            if parameters[1].value:
-                parameters[2].enabled = True
-
-                if parameters[2].value:
-                    parameters[3].enabled = True
+            parameters[2].enabled = True
+            parameters[3].enabled = True
 
         return
 
@@ -488,7 +484,7 @@ class RemilepostRoute(object):
 
         if parameters[0].value:
 
-            list_route_sri = []
+            param_route_sri = parameters[0].value
 
             if not arcpy.Exists(sldroutetab):
 
@@ -501,10 +497,11 @@ class RemilepostRoute(object):
                     with arcpy.da.SearchCursor(
                         in_table=sldroutetab,
                         field_names=["SRI"],
-                        where_clause="SRI='" + parameters[0].value + "'"
+                        where_clause="SRI='" + param_route_sri + "'"
                     ) as c_segment:
 
                         sri_is_valid = False
+
                         for r_segment in c_segment:
 
                             if r_segment[0] != '':
@@ -514,19 +511,47 @@ class RemilepostRoute(object):
 
                             parameters[0].clearMessage()
                             parameters[1].enabled = True
+
                         else:
 
                             parameters[0].setErrorMessage(parameters[0].value + ' is not a valid SRI')
+
                             for x in range(1, 4):
                                 parameters[x].enabled = False
+
                 except Exception as ex:
+
                     parameters[0].setErrorMessage(ex.message + " - " + traceback.format_exc())
 
+        # verify new mile post start value
+        if parameters[1].value:
 
-        # validate Route Change Form ID
+            param_route_mp_from_new = parameters[1].value
+
+            if re.match("[0-9]+.[0-9]{2}", param_route_mp_from_new):
+
+                parameters[1].clearMessage()
+
+            else:
+                parameters[1].setErrorMessage("Milepost FROM value must only contain two decimal places.")
+
+        # verify new mile post end value
+        if parameters[2].value:
+
+            param_route_mp_to_new = parameters[2].value
+
+            if re.match("[0-9]+.[0-9]{2}", param_route_mp_to_new):
+
+                parameters[2].clearMessage()
+            else:
+                    parameters[2].setErrorMessage("Milepost TO value must only contain two decimal places.")
+
+        # verify Route Change Form ID
         if parameters[3].value:
 
-            if re.match("[0-9]+", str(parameters[3].value)):
+            param_route_change_form_id = parameters[3].value
+
+            if re.match("[0-9]+", str(param_route_change_form_id)):
 
                 parameters[3].clearMessage()
             else:
@@ -544,12 +569,12 @@ class RemilepostRoute(object):
 
         os.sys.path.append(os.path.dirname(__file__))
 
-        # load Route Type Domain Values
-        route_domain_values = [d for d in arcpy.da.ListDomains(arcpy.env.workspace) if d.name == 'ROUTE_TYPE'][0].codedValues
-
         p_route_sri = parameters[0].value
         p_route_mp_from_new = parameters[1].value
         p_route_mp_to_new = parameters[2].value
         p_route_change_form_id = parameters[3].value
 
+
+
         return
+

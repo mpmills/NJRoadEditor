@@ -10,6 +10,7 @@
 				<Button caption="NJRE Manual" category="NJ Road Editor" class="ButtonClass332" id="Roads_addin.buttonDocumentation" image="Images\book.png" message="Documentation for the NJ Road Editor Add-In. Launches the .pdf manual." tip="About"><Help heading="Help Heading" /></Button>
 				<Button caption="Roads Data Model" category="NJ Road Editor" class="ButtonClass337" id="Roads_addin.buttonDataModel" image="Images\book.png" message="NJ Road Centerlines Maintenence Data Model. Launches a PDF." tip="About"><Help heading="Help Heading" /></Button>
         <Button caption="Global Change SRI" category="NJ Road Editor" class="ButtonClass701" id="Roads_addin.buttonChangeSRI" image="Images\book.png" message="MBI Global Update of SRI SLD_ROUTE and LINEAR_REF tables." tip="ChangeSRI"><Help heading="Help Heading" /></Button>
+        <Button caption="Remilepost Route" category="NJ Road Editor" class="ButtonClass702" id="Roads_addin.buttonRemilepostRoute" image="Images\book.png" message="MBI Remilepost Route." tip="Re-milepost Route"><Help heading="Help Heading" /></Button>
         </Commands>
     <Extensions>
         <Extension autoLoad="true" category="NJ Road Editor" class="ExtensionClass1" description="NJ Road Editor Add-In Extension" id="Roads_addin.extension1" name="NJ Road Editor Extension" productName="NJ Road Editor Extension" showInExtensionDialog="true" />
@@ -22,6 +23,7 @@
         <Menu caption="SLD Manager" category="NJ Road Editor" id="Roads_addin.menu_mbi" isRootMenu="false" separator="true">
             <Items>
                 <Button refID="Roads_addin.buttonChangeSRI" />
+                <Button refID="Roads_addin.buttonRemilepostRoute" />
             </Items>
         </Menu>
     </Menus>

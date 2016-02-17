@@ -662,7 +662,7 @@ class ButtonClass701(object):
 class ButtonClass702(object):
     """Implementation for Roads_addin.button_mbi_RemilepostRoute"""
     def __init__(self):
-        self.enabled = True
+        self.enabled = False
         self.checked = False
 
     def onClick(self):
@@ -1077,6 +1077,7 @@ class ExtensionClass1(object):
                 
                 # mbi buttons
                 buttonChangeSRI.enabled = True
+                buttonRemilepostRoute.enabled = True
                 
                 self.NJRE_Env = True
 
@@ -1124,6 +1125,7 @@ class ExtensionClass1(object):
         
         # mbi buttons disable
         buttonChangeSRI.enabled = False
+        buttonRemilepostRoute.enabled = False
         
         #buttonBatchBuildName.enabled = False
 
