@@ -659,6 +659,23 @@ class ButtonClass701(object):
             print "error:" + ex.message
             # arcpy.AddMessage("something went wrong." + ex.message)
 
+class ButtonClass702(object):
+    """Implementation for Roads_addin.button_mbi_RemilepostRoute"""
+    def __init__(self):
+        self.enabled = True
+        self.checked = False
+
+    def onClick(self):
+        global tbx_mbi_sld_manager
+        try:
+            pythonaddins.GPToolDialog(tbx_mbi_sld_manager, "RemilepostRoute")
+            # arcpy.RefreshActiveView()
+        except Exception as ex:
+            trace = traceback.format_exc()
+            print trace
+            print "error:" + ex.message
+            # arcpy.AddMessage("something went wrong." + ex.message)
+
 #------------------------------------------------------------------------------
 # EXTENSION - NJ ROAD EDITOR EXTENSION
 class ExtensionClass1(object):

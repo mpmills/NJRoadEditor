@@ -102,7 +102,7 @@ class Toolbox(object):
         self.alias = "sld_manager"
 
         # List of tool classes associated with this toolbox
-        self.tools = [ChangeSRI]
+        self.tools = [ChangeSRI, RemilepostRoute]
 
 
 class ChangeSRI(object):
@@ -398,3 +398,158 @@ class ChangeSRI(object):
 
         return
 
+
+class RemilepostRoute(object):
+
+    print "Remilepost Route Tool"
+
+    def __init__(self):
+        """
+        Remilepost Route:
+        This tool with update the LINEAR_REF tables MILEPOST_FR, MILEPOST_TO, and RCF fields
+        The associate segment geometries will also be updated (M Values)
+
+        """
+        self.label = "RemilepostRoute"
+        self.description = "Update the route mile post values in LINEAR_REF Table and Segment feature class geometries"
+        # self.canRunInBackground = False
+
+        # global segmentfc, segmentchangetab, transtab, segnametab, segshieldtab, segcommtab, linreftab, sldroutetab
+
+    def getParameterInfo(self):
+        """Define parameter definitions"""
+
+        param_route_sri = arcpy.Parameter(
+            displayName="SRI",
+            name="route_sri",
+            datatype="GPString",
+            parameterType="Required",
+            direction="Input")
+
+        param_route_mp_from_new = arcpy.Parameter(
+            displayName="Milepost FROM",
+            name="route_mp_from_new",
+            datatype="GPString",
+            parameterType="Required",
+            direction="Input")
+        param_route_mp_from_new.enabled = False
+
+        param_route_mp_to_new = arcpy.Parameter(
+            displayName="Milepost TO",
+            name="route_mp_from_to",
+            datatype="GPString",
+            parameterType="Required",
+            direction="Input")
+        param_route_mp_to_new.enabled = False
+
+        param_route_change_form_id = arcpy.Parameter(
+            displayName="Route Change Form ID",
+            name="route_change_form_id",
+            datatype="GPString",
+            parameterType="Required",
+            direction="Input"
+        )
+        param_route_change_form_id.enabled = False
+
+        params_RemilepostRoute = [
+            param_route_sri,
+            param_route_mp_from_new,
+            param_route_mp_to_new,
+            param_route_change_form_id
+        ]
+
+        return params_RemilepostRoute
+
+    def isLicensed(self):
+        """Set whether tool is licensed to execute."""
+        return True
+
+    def updateParameters(self, parameters):
+        """Modify the values and properties of parameters before internal
+        validation is performed.  This method is called whenever a parameter
+        has been changed."""
+
+        if parameters[0].value:
+            parameters[1].enabled = True
+
+            if parameters[1].value:
+                parameters[2].enabled = True
+
+                if parameters[2].value:
+                    parameters[3].enabled = True
+
+        return
+
+    def updateMessages(self, parameters):
+        """Modify the messages created by internal validation for each tool
+        parameter.  This method is called after internal validation."""
+
+        import traceback
+
+        if parameters[0].value:
+
+            list_route_sri = []
+
+            if not arcpy.Exists(sldroutetab):
+
+                parameters[0].setErrorMessage("Can not access the SLD ROUTE sde table.")
+            else:
+
+                # is user provided SRI in the list
+                try:
+
+                    with arcpy.da.SearchCursor(
+                        in_table=sldroutetab,
+                        field_names=["SRI"],
+                        where_clause="SRI='" + parameters[0].value + "'"
+                    ) as c_segment:
+
+                        sri_is_valid = False
+                        for r_segment in c_segment:
+
+                            if r_segment[0] != '':
+                                sri_is_valid = True
+
+                        if sri_is_valid:
+
+                            parameters[0].clearMessage()
+                            parameters[1].enabled = True
+                        else:
+
+                            parameters[0].setErrorMessage(parameters[0].value + ' is not a valid SRI')
+                            for x in range(1, 4):
+                                parameters[x].enabled = False
+                except Exception as ex:
+                    parameters[0].setErrorMessage(ex.message + " - " + traceback.format_exc())
+
+
+        # validate Route Change Form ID
+        if parameters[3].value:
+
+            if re.match("[0-9]+", str(parameters[3].value)):
+
+                parameters[3].clearMessage()
+            else:
+
+                parameters[3].setErrorMessage("RCF ID must be a numerical value.")
+        return
+
+    def execute(self, parameters, messages):
+
+        """The source code of the tool."""
+
+        import arcpy
+        import os
+        import traceback
+
+        os.sys.path.append(os.path.dirname(__file__))
+
+        # load Route Type Domain Values
+        route_domain_values = [d for d in arcpy.da.ListDomains(arcpy.env.workspace) if d.name == 'ROUTE_TYPE'][0].codedValues
+
+        p_route_sri = parameters[0].value
+        p_route_mp_from_new = parameters[1].value
+        p_route_mp_to_new = parameters[2].value
+        p_route_change_form_id = parameters[3].value
+
+        return
