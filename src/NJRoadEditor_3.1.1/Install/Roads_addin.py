@@ -644,7 +644,7 @@ class ButtonClass337(object):
 class ButtonClass701(object):
     """Implementation for Roads_addin.button_mbi_ChangeSRI"""
     def __init__(self):
-        self.enabled = True
+        self.enabled = False
         self.checked = False
         # global NJRE_logger - consider using existing logging functionality?
 
@@ -1073,8 +1073,11 @@ class ExtensionClass1(object):
                 buttonDel.enabled = True
                 buttonAddName.enabled = True
                 buttonLRS.enabled = True
-                #buttonIdentify.enabled = True
-
+                #buttonIdentify.enabled = 
+                
+                # mbi buttons
+                buttonChangeSRI.enabled = True
+                
                 self.NJRE_Env = True
 
                 domains = arcpy.da.ListDomains(arcpy.env.workspace)
@@ -1118,6 +1121,10 @@ class ExtensionClass1(object):
         buttonAddName.enabled = False
         buttonLRS.enabled = False
         #buttonIdentify.enabled = False
+        
+        # mbi buttons disable
+        buttonChangeSRI.enabled = False
+        
         #buttonBatchBuildName.enabled = False
 
         # Clean up the pickled objects in the scratch workspace...
