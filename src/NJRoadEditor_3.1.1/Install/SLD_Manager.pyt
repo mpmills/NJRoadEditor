@@ -2,10 +2,11 @@
 # Name:         SLD_Manager.pyt
 # Purpose:      Python toolbox file.
 #
-# Author:       NJ Office of GIS, Michael Baker International
-# Contact:      gis-admin@oit.state.nj.us, michael.mills@mbakerintl.com
+# Authors:       NJ Office of GIS / Michael Baker International
+# Contact:      gis-admin@oit.state.nj.us / michael.mills@mbakerintl.com
 #
 # Created:      1/19/2016
+# Updated:      4/14/2016 Michael Baker International
 # Copyright:    (c) NJ Office of GIS 2014
 # Licence:      GPLv3
 
@@ -24,8 +25,17 @@
 
 #-------------------------------------------------------------------------------
 
-import arcpy, pythonaddins
-import os, sys, erebus, re
+import arcpy
+import os
+import sys
+import erebus
+import re
+import pythonaddins
+import math
+import traceback
+import decimal
+import json
+
 from arcpy import env
 
 segmentfc = ""; segmentchangetab = ""; transtab = ""; segnametab = ""; segshieldtab = ""; segcommtab = ""; linreftab = ""; sldroutetab = "";
@@ -89,7 +99,7 @@ try:
     linreftab = erebus.getlongname(arcpy.env.workspace, longnames["LINEAR_REF"], "Table")
     sldroutetab = erebus.getlongname(arcpy.env.workspace, longnames["SLD_ROUTE"], "Table")
 except:
-    arcpy.MessageAdd("There was an error identifing a table.")
+    arcpy.AddMessage("There was an error identifing a table.")
     # pass
 
 
@@ -122,6 +132,7 @@ class ChangeSRI(object):
         # global segmentfc, segmentchangetab, transtab, segnametab, segshieldtab, segcommtab, linreftab, sldroutetab
 
     def getParameterInfo(self):
+
         """Define parameter definitions"""
         list_route_type = [d for d in arcpy.da.ListDomains(arcpy.env.workspace) if d.name == 'ROUTE_TYPE'][0].codedValues.values()
         
@@ -254,15 +265,12 @@ class ChangeSRI(object):
             else:
 
                 parameters[3].setErrorMessage("RCF ID must be a numerical value.")
+
         return
 
     def execute(self, parameters, messages):
 
         """The source code of the tool."""
-
-        import arcpy
-        import os
-        import traceback
 
         os.sys.path.append(os.path.dirname(__file__))
 
@@ -287,7 +295,10 @@ class ChangeSRI(object):
         # test that you can get access to what is currently selected in the SEGMENT
         # count = int(arcpy.GetCount_management(sldroutetab).getOutput(0))
         
-        arcpy.AddMessage('\nUpdating SRI value globally.\n Original SRI: ' + parameters[0].value + '\n New SRI: ' + parameters[1].value + '\n Route Type: ' + parameters[2].value + '\n RCF ID: ' + str(parameters[3].value))
+        arcpy.AddMessage('\nUpdating SRI value globally.\n Original SRI: ' + parameters[0].value +
+                         '\n New SRI: ' + parameters[1].value +
+                         '\n Route Type: ' + parameters[2].value +
+                         '\n RCF ID: ' + str(parameters[3].value))
 
         # sldroutetab    - sld route table
         # linreftab - linear ref table
@@ -355,7 +366,7 @@ class ChangeSRI(object):
 
         try:
 
-            field_names_linref = ['SRI', 'SEG_ID', 'GLOBALID']
+            field_names_linref = [ 'SRI', 'SEG_ID', 'GLOBALID' ]
             
             where_clause = "SRI = '" + p_sri + "'"
 
@@ -406,7 +417,7 @@ class RemilepostRoute(object):
     def __init__(self):
         """
         Remilepost Route:
-        This tool with update the LINEAR_REF tables MILEPOST_FR, MILEPOST_TO, and RCF fields
+        This tool will update the LINEAR_REF tables MILEPOST_FR, MILEPOST_TO, and RCF fields
         The associate segment geometries will also be updated (M Values)
 
         """
@@ -424,37 +435,90 @@ class RemilepostRoute(object):
             name="route_sri",
             datatype="GPString",
             parameterType="Required",
-            direction="Input")
+            direction="Input"
+        )
+
+        param_route_mp_from_current = arcpy.Parameter(
+            displayName="Milepost From",
+            name="route_mp_from_current",
+            datatype="GPDouble",
+            parameterType="Required",
+            direction="Input"
+        )
+
+        param_route_mp_from_current.filter.type = "ValueList"
+        param_route_mp_from_current.filter.list = []
+        param_route_mp_from_current.enabled = False
+
+        param_route_mp_to_current = arcpy.Parameter(
+            displayName="Milepost To",
+            name="route_mp_to_current",
+            datatype="GPDouble",
+            parameterType="Required",
+            direction="Input"
+        )
+
+        param_route_mp_to_current.filter.type = "ValueList"
+        param_route_mp_to_current.filter.list = []
+        param_route_mp_to_current.enabled = False
 
         param_route_mp_from_new = arcpy.Parameter(
-            displayName="Milepost FROM",
+            displayName="New Milepost FROM",
             name="route_mp_from_new",
-            datatype="GPString",
+            datatype="GPDouble",
             parameterType="Required",
-            direction="Input")
+            direction="Input"
+        )
         param_route_mp_from_new.enabled = False
 
         param_route_mp_to_new = arcpy.Parameter(
-            displayName="Milepost TO",
+            displayName="New Milepost TO",
             name="route_mp_from_to",
-            datatype="GPString",
+            datatype="GPDouble",
             parameterType="Required",
-            direction="Input")
+            direction="Input"
+        )
         param_route_mp_to_new.enabled = False
+
+        param_route_mp_from_parent = arcpy.Parameter(
+            displayName="Parent Milepost FROM",
+            name="route_mp_from_parent",
+            datatype="GPDouble",
+            parameterType="Optional",
+            direction="Input"
+        )
+        param_route_mp_from_parent.enabled = False
+
+        param_route_mp_to_parent = arcpy.Parameter(
+            displayName="Parent Milepost TO",
+            name="route_mp_to_parent",
+            datatype="GPDouble",
+            parameterType="Optional",
+            direction="Input"
+        )
+        param_route_mp_to_parent.enabled = False
 
         param_route_change_form_id = arcpy.Parameter(
             displayName="Route Change Form ID",
             name="route_change_form_id",
             datatype="GPString",
-            parameterType="Required",
+            parameterType="Optional",
             direction="Input"
         )
         param_route_change_form_id.enabled = False
 
         params_RemilepostRoute = [
             param_route_sri,
+
+            param_route_mp_from_current,
+            param_route_mp_to_current,
+
             param_route_mp_from_new,
             param_route_mp_to_new,
+
+            param_route_mp_from_parent,
+            param_route_mp_to_parent,
+
             param_route_change_form_id
         ]
 
@@ -469,10 +533,95 @@ class RemilepostRoute(object):
         validation is performed.  This method is called whenever a parameter
         has been changed."""
 
-        if parameters[0].value:
-            parameters[1].enabled = True
-            parameters[2].enabled = True
-            parameters[3].enabled = True
+        # when the sri has been updated, populate the milepost from and milepost to parameter inputs
+        # the milepost_from and/or milepost_to parameters will be updated by the user but are included for reference
+
+        if (not parameters[0].hasBeenValidated) or parameters[0].altered:
+
+            p_route_sri = parameters[0].value
+
+            mp_dropdown_data = arcpy.da.TableToNumPyArray(
+                in_table=linreftab,
+                field_names=[ "MILEPOST_FR", "MILEPOST_TO", "SEG_TYPE_ID" ],
+                where_clause="SRI='" + p_route_sri + "' AND LRS_TYPE_ID IN (1)",
+            )
+
+            secondary = "S" in mp_dropdown_data[0][2]
+
+            # get a sorted set of From mileposts for dropdown
+            ary_from_current = [ round( f[ 0 ], 3 ) for f in mp_dropdown_data ]
+            set_from_current = sorted( set( ary_from_current ) )
+
+            # get a sorted set of To milesposts for dropdown
+            ary_to_current = [ round( f[ 1 ], 3 ) for f in mp_dropdown_data ]
+            set_to_current = sorted( set( ary_to_current ) )
+
+            with arcpy.da.SearchCursor(
+                in_table=linreftab,
+                field_names=[ "SEG_ID", "SEG_GUID", "MILEPOST_FR", "MILEPOST_TO", "RCF" ],
+                where_clause="LRS_TYPE_ID=1 and SRI='" + p_route_sri + "'",
+                sql_clause=(None, "ORDER BY MILEPOST_FR")
+
+            ) as linrefCursor:
+
+                count_linref = 0
+
+                for linrefRow in linrefCursor:
+
+                    if count_linref == 0:
+
+                        distance_mp_from = float(linrefRow[2])
+                    else:
+
+                        distance_mp_to = float(linrefRow[3])
+
+                    count_linref += 1
+
+            parameters[ 1 ].enabled = True
+            parameters[ 1 ].filter.list = set_from_current
+            parameters[ 1 ].value = set_from_current[ 0 ]
+
+            # enable it after the first dropdown is selected
+            # parameters[2].enabled = True
+            parameters[ 2 ].filter.list = set_to_current
+            parameters[ 2 ].value = set_to_current[ len( set_to_current ) - 1 ]
+
+            parameters[ 3 ].enabled = True
+            parameters[ 4 ].enabled = True
+
+            if secondary:
+
+                parameters[ 5 ].enabled = True
+                parameters[ 6 ].enabled = True
+
+                parameters[ 5 ].parameterType = "Required"
+                parameters[ 6 ].parameterType = "Required"
+
+            parameters[7].enabled = True
+
+        if (not parameters[ 1 ].hasBeenValidated) or parameters[ 1 ].altered:
+
+            mp_from_selected = parameters[ 1 ].value
+
+            # update parameters 2 filter list to not allow selection of mileposts before or equal to FROM selection
+            # todo: filter to_milepost for values > from milepost selection
+
+            parameters[ 2 ].enabled = True
+
+        if (not parameters[ 2 ].hasBeenValidated) or parameters[ 2 ].altered:
+
+            mp_from_selected = parameters[ 2 ].value
+
+            arcpy.AddMessage( mp_from_selected )
+            # update parameters 2 filter list to not allow selection of mileposts before or equal to FROM selection
+            # todo: for val in parameters[2].filter.list:
+
+        if (not parameters[ 3 ].hasBeenValidated) or parameters[ 3 ].altered:
+
+            arcpy.AddMessage( mp_from_selected )
+
+            # update parameters 2 filter list to not allow selection of mileposts before or equal to FROM selection
+            # todo: for val in parameters[2].filter.list:
 
         return
 
@@ -489,6 +638,7 @@ class RemilepostRoute(object):
             if not arcpy.Exists(sldroutetab):
 
                 parameters[0].setErrorMessage("Can not access the SLD ROUTE sde table.")
+
             else:
 
                 # is user provided SRI in the list
@@ -521,60 +671,459 @@ class RemilepostRoute(object):
 
                 except Exception as ex:
 
-                    parameters[0].setErrorMessage(ex.message + " - " + traceback.format_exc())
+                    parameters[0].setErrorMessage("Error with Parameter Value 0: " + param_route_sri + " \n " + ex.message + " - " + traceback.format_exc())
 
-        # verify new mile post start value
-        if parameters[1].value:
+        try:
 
-            param_route_mp_from_new = parameters[1].value
+            # verify new mile post start value
+            if parameters[1].value:
 
-            if re.match("[0-9]+.[0-9]{2}", param_route_mp_from_new):
+                param_route_mp_from_new = parameters[1].value
 
-                parameters[1].clearMessage()
+                if re.match("([0-9]+.?[0-9]{0,3})", str(param_route_mp_from_new)):
 
-            else:
-                parameters[1].setErrorMessage("Milepost FROM value must only contain two decimal places.")
+                    parameters[1].clearMessage()
+
+                else:
+                    parameters[1].setErrorMessage("Milepost FROM value must only contain two decimal places.")
+        except Exception as ex:
+
+            parameters[0].setErrorMessage("Error with Parameter Value 1: " + parameters[1].value + " \n " + ex.message + " - " + traceback.format_exc())
 
         # verify new mile post end value
         if parameters[2].value:
 
             param_route_mp_to_new = parameters[2].value
 
-            if re.match("[0-9]+.[0-9]{2}", param_route_mp_to_new):
+            if re.match("([0-9]+.?[0-9]{0,3})", str(param_route_mp_to_new)):
 
                 parameters[2].clearMessage()
             else:
-                    parameters[2].setErrorMessage("Milepost TO value must only contain two decimal places.")
+                parameters[2].setErrorMessage("Milepost TO value must only contain two decimal places.")
 
         # verify Route Change Form ID
-        if parameters[3].value:
+        if parameters[7].value:
 
-            param_route_change_form_id = parameters[3].value
+            param_route_change_form_id = parameters[7].value
 
             if re.match("[0-9]+", str(param_route_change_form_id)):
 
-                parameters[3].clearMessage()
+                parameters[7].clearMessage()
             else:
+                parameters[7].setErrorMessage("RCF ID must be a numerical value.")
 
-                parameters[3].setErrorMessage("RCF ID must be a numerical value.")
+        # todo: saved value will be appended to existing RCF ID for auditing purposes
+
+
         return
 
     def execute(self, parameters, messages):
 
+        global segmentfc
+
         """The source code of the tool."""
 
-        import arcpy
-        import os
-        import traceback
+        # import arcpy
+        # import os
+        # import traceback
 
         os.sys.path.append(os.path.dirname(__file__))
 
-        p_route_sri = parameters[0].value
-        p_route_mp_from_new = parameters[1].value
-        p_route_mp_to_new = parameters[2].value
-        p_route_change_form_id = parameters[3].value
+        p_route_sri = parameters[ 0 ].value
+        p_route_mp_from_current = parameters[ 1 ].value
+        p_route_mp_to_current = parameters[ 2 ].value
+
+        p_route_mp_from_new = parameters[ 3 ].value
+        p_route_mp_to_new = parameters[ 4 ].value
+
+        p_route_mp_from_parent = parameters[ 5 ]
+        p_route_mp_to_parent = parameters[ 6 ]
+
+        p_route_change_form_id = parameters[ 7 ].value
+
+        #array position for easier reference
+        pos_sid = 0
+        pos_guid = 1
+        pos_mpfrom = 2
+        pos_mpto = 3
+        pos_rcf = 4
+
+        distance_mp_total = abs(float(p_route_mp_to_new) - float(p_route_mp_from_new))
+
+        distance_total_mp = 0
+        distance_total_gis = 0
+
+        list_segment_guids = []
+        list_segment_ids = []
+
+        print "Route SRI: " + p_route_sri
+        arcpy.AddMessage("Route SRI: " + p_route_sri)
+
+        linRef_reference = {}
+
+        # calculate current gis distance
+        try:
+
+            option1 = False
+            option2 = True
+
+            distances = []
+            total_calculated_distance = 0
+
+            where_clause_linRef = " LRS_TYPE_ID=1 " \
+                                  " AND SRI='" + p_route_sri + "' " \
+                                  " AND MILEPOST_FR >= " + str( p_route_mp_from_current ) + \
+                                  " AND MILEPOST_TO <= " + str(p_route_mp_to_current )
+
+            if option1:
+
+                # option 1 collects all segment GUIDs from the lin ref table and then does one secondary search query
+                # using search cursor vs tabletonumpyarray to support sorting by milepost
+
+                arcpy.AddMessage( where_clause_linRef )
+
+                with arcpy.da.SearchCursor(
+                    in_table=linreftab,
+                    field_names=[ "SEG_ID", "SEG_GUID" ],
+                    where_clause=where_clause_linRef,
+                    sql_clause=(None, "ORDER BY MILEPOST_FR")
+
+                ) as distanceLinRefCursor:
+
+                    for distanceLinRefRow in distanceLinRefCursor:
+
+                        distances.append(distanceLinRefRow[1])
+
+                arcpy.AddMessage(distances)
+
+                where_clause_segments = " SEG_GUID IN ('" + "','".join([str(d) for d in distances]) + "')"
+
+                arcpy.AddMessage(where_clause_segments)
+
+                with arcpy.da.SearchCursor(
+                    in_table=segmentfc,
+                    field_names=["SHAPE@LENGTH"],
+                    where_clause=where_clause_segments
+
+                ) as distanceCursor:
+
+                    for distanceRow in distanceCursor:
+
+                        total_calculated_distance += distanceRow[0]
+
+            elif option2 == True:
+
+                # option 2 uses an inline cursor, where each segment feature is selected within the lin ref lookup
+                # an SRI may have so many segments that the secondary where clause on the segment fc is too long.
+                # this ensures that will never happen. but it will be slower.. we should
+                # have some logic that determines which scenario it will use
+
+                with arcpy.da.SearchCursor(
+                    in_table=linreftab,
+                    field_names=["SEG_ID", "SEG_GUID"],
+                    where_clause=where_clause_linRef,
+                    sql_clause=(None, "ORDER BY MILEPOST_FR")
+
+                ) as distanceLinRefCursor:
+
+                    for distanceLinRefRow in distanceLinRefCursor:
+
+                        with arcpy.da.SearchCursor(
+                            in_table=segmentfc,
+                            field_names=["SHAPE@LENGTH"],
+                            where_clause="SEG_GUID = '" + distanceLinRefRow[1] + "'"
+                        ) as distanceCursor:
+
+                            for distanceRow in distanceCursor:
+
+                                total_calculated_distance += distanceRow[0]
+
+            # todo: determine the scenario for updating
+
+            arcpy.AddMessage("Total Calculated Distance from MP Start to MP End: " + str(total_calculated_distance))
+
+            # calculate the scaling factor
+            distance_conversion_factor =  distance_mp_total / ( total_calculated_distance / 5280)
+            arcpy.AddMessage( "distance_mp_total:" + str( distance_mp_total ) )
+            arcpy.AddMessage( "Distance Conversion Factor:" + str( distance_conversion_factor ) )
+
+            # generate a collection of segments that will be updated, sorting by milepost_from
+            # (not sure what happens when MILEPOST_FR field has an error)
+            with arcpy.da.SearchCursor(
+                in_table=linreftab,
+                field_names=["SEG_ID", "SEG_GUID", "MILEPOST_FR", "MILEPOST_TO", "RCF"],
+                # where_clause="LRS_TYPE_ID=1 and SRI='" + p_route_sri + "'",
+                where_clause=where_clause_linRef,
+                sql_clause=(None, "ORDER BY MILEPOST_FR")
+
+            ) as linrefCursor:
+
+                count_linref = 0
+
+                for linrefRow in linrefCursor:
+
+                    # linRef_record = {}
+                    # linRef_record["guid"] = linrefRow[pos_guid]
+                    # linRef_record["mp_from"] = linrefRow[pos_mpfrom]
+                    # linRef_record["mp_to"] = linrefRow[pos_mpto]
+                    # linRef_record["distance"] = None
+                    # linRef_record["order"] = count_linref
+
+                    list_segment_guids.append(linrefRow[pos_guid])
+                    list_segment_ids.append(linrefRow[pos_sid])
+
+                    count_segment = 0
+
+                    distance_segment_begin = distance_total_gis
+
+                    arcpy.AddMessage("linrefRow")
+                    arcpy.AddMessage(linrefRow)
+
+                    ref_guid = linrefRow[pos_guid]
+
+                    # create a segment cursor to update geometry M values
+                    segmentCursor = arcpy.UpdateCursor(
+                        segmentfc,
+                        "SEG_GUID = '" + ref_guid + "'",
+                        ["SHAPE@", "PRIME_NAME"]
+                    )
+
+                    # calculate updates for linref table values
+
+                    for segmentRow in segmentCursor:
+
+                        vertex_previous_geometry = {}
+                        segVertexDistance = 0
+
+                        # get the segment geometry and then vertices collections
+                        segVerticesGeom = segmentRow.getValue( "SHAPE" )
+
+                        # get json representation and look for true curves
+                        j_seg = json.loads( segVerticesGeom.JSON )
+
+                        segVertices = []
+
+                        arcpy.AddMessage( j_seg )
+
+                        # test for true curve
+                        if "curvePaths" in j_seg:
+
+                            # curves exist, so we'll need to get the well known text of the curve, which we will derive an x,y list from
+                            seg_wkt = segVerticesGeom.WKT
+
+                            arcpy.AddMessage( "seg_wkt" )
+                            arcpy.AddMessage( seg_wkt )
+
+                            # grab only the stuff within the parens
+                            wkt_points = seg_wkt[ seg_wkt.find( "((" ) + 2:seg_wkt.find( "))" ) ]
+
+                            points = wkt_points.split( ", " )
+
+                            arcpy.AddMessage( "points" )
+                            arcpy.AddMessage( points )
+
+                            for point in points:
+                                segVertices.append(point.strip( ).split( " " ))
+
+                            newSegmentGeom = arcpy.Array( )
+                            newSegmentPart = arcpy.Array( )
+
+                            arcpy.AddMessage( "segVertices" )
+                            arcpy.AddMessage( segVertices )
+
+                            for i in range( len( segVertices ) ):
+
+                                # grab the current segment vertex
+                                segVertex = segVertices[ i ]
+
+                                arcpy.AddMessage( "segVertex" )
+                                arcpy.AddMessage( segVertex )
+
+                                # create a new point object, essentially copying the existing one
+                                vertex_point = arcpy.Point( segVertex[0], segVertex[1], None, segVertex[2] )
+
+                                # create a point geometry from the point object.. necessary for distance measurement
+                                vertex_geom = arcpy.PointGeometry( vertex_point )
+
+                                # measure distance from previous vertex to current vertex. first vertex is at aggregate distance
+                                if i > 0:
+                                    segVertexDistance += (vertex_previous_geometry.distanceTo( vertex_geom ))
+
+                                # set the current geometry as previous for next iteration
+                                vertex_previous_geometry = vertex_geom
+
+                                # set the point M value
+                                # account for an aggregate of total route distance, convert to miles, round 3 decimal places
+                                segVertex[2] = round( ((distance_total_gis + segVertexDistance) / 5280) * distance_conversion_factor, 3 )
+
+                                # create a new point for the updated vertex (could just recycle vertex_point..)
+                                newSegmentVertex = arcpy.Point( segVertex[0], segVertex[1], None, segVertex[2] )
+
+                                # add the segment vertex to the segment parts array
+                                newSegmentPart.add( newSegmentVertex )
+
+                            # add the segment part to the point collection
+                            newSegmentGeom.add( newSegmentPart )
+
+                            # add the total segment distance to aggregate distance (at beginning of new segment)
+                            distance_total_gis += float( segVerticesGeom.length )
+
+                            arcpy.AddMessage( "Vertex M: " + str( distance_total_gis + (segVertexDistance / 5280) ) )
+                            arcpy.AddMessage( "Distance: " + str( segVertexDistance ) + "(" + str( segVertexDistance / 5280 ) + ")" )
+
+                            # create the new polyline object, ensure SR. Z and M must be set to be able to update M
+                            newSegment = arcpy.Polyline( newSegmentGeom, arcpy.SpatialReference( 3424 ), False, True )
+
+                            # update the row geometry with the new polyline
+                            segmentRow.setValue( "SHAPE", newSegment )
+
+                            # update the row
+                            segmentCursor.updateRow( segmentRow )
+
+                            count_segment += 1
+
+                        else:
+
+                            segVertices = segVerticesGeom.getPart( 0 )
+
+                            newSegmentGeom = arcpy.Array( )
+                            newSegmentPart = arcpy.Array( )
+
+                            arcpy.AddMessage( "segVertices" )
+                            arcpy.AddMessage( segVertices )
+
+                            for i in range( len( segVertices ) ):
+
+                                # grab the current segment vertex
+                                segVertex = segVertices[ i ]
+
+                                arcpy.AddMessage( "segVertex" )
+                                arcpy.AddMessage( segVertex )
+
+                                # create a new point object, essentially copying the existing one
+                                vertex_point = arcpy.Point( segVertex.X, segVertex.Y, None, segVertex.M )
+
+                                # create a point geometry from the point object.. necessary for distance measurement
+                                vertex_geom = arcpy.PointGeometry( vertex_point )
+
+                                # measure distance from previous vertex to current vertex. first vertex is at aggregate distance
+                                if i > 0:
+                                    segVertexDistance += (vertex_previous_geometry.distanceTo( vertex_geom ))
+
+                                # set the current geometry as previous for next iteration
+                                vertex_previous_geometry = vertex_geom
+
+                                # set the point M value
+                                # account for an aggregate of total route distance, convert to miles, round 3 decimal places
+                                segVertex.M = round( ((distance_total_gis + segVertexDistance) / 5280) * distance_conversion_factor, 3 )
+
+                                # create a new point for the updated vertex (could just recycle vertex_point..)
+                                newSegmentVertex = arcpy.Point( segVertex.X, segVertex.Y, None, segVertex.M )
+
+                                # add the segment vertex to the segment parts array
+                                newSegmentPart.add( newSegmentVertex )
+
+                            # add the segment part to the point collection
+                            newSegmentGeom.add( newSegmentPart )
+
+                            # add the total segment distance to aggregate distance (at beginning of new segment)
+                            distance_total_gis += float( segVerticesGeom.length )
+
+                            arcpy.AddMessage( "Vertex M: " + str( distance_total_gis + (segVertexDistance / 5280) ) )
+                            arcpy.AddMessage( "Distance: " + str( segVertexDistance ) + "(" + str( segVertexDistance / 5280 ) + ")" )
+
+                            # create the new polyline object, ensure SR. Z and M must be set to be able to update M
+                            newSegment = arcpy.Polyline( newSegmentGeom, arcpy.SpatialReference( 3424 ), False, True )
+
+                            # update the row geometry with the new polyline
+                            segmentRow.setValue( "SHAPE", newSegment )
+
+                            # update the row
+                            segmentCursor.updateRow( segmentRow )
+
+                            count_segment += 1
+
+                    # todo: create of collection of 'update objects'
+                    # which will then be paseed to a function specificially designed to update the linRef table
+
+                    # update the MILEPOST_FROM value in the linref table
+                    linRefUpdate_mp_from = round(distance_segment_begin / 5280, 3)
+                    linRefUpdate_mp_to = round(distance_total_gis / 5280, 3)
+                    linRefUpdate_rfc_id = (str(linrefRow[pos_rcf] or '') + " " + str(p_route_change_form_id)).strip()
+
+                    lrUpdateFields = [ "SEG_ID", "SEG_GUID", "MILEPOST_FR", "MILEPOST_TO", "RCF", "LRS_TYPE_ID", "SEG_TYPE_ID" ]
+
+                    # used for lookups when reference related types.. Parent Mileposts, for example
+                    npa = arcpy.da.TableToNumPyArray(
+                        in_table='NJOIT_CENTERLINE.DBO.LINEAR_REF',
+                        field_names=lrUpdateFields,
+                        where_clause="SEG_GUID='" + ref_guid + "' AND LRS_TYPE_ID IN (1,2,3)"
+                    )
+
+                    with arcpy.da.UpdateCursor(
+                            in_table=linreftab,
+                            field_names=lrUpdateFields,
+                            where_clause="SEG_GUID='" + ref_guid + "' AND LRS_TYPE_ID IN (1,2,3)"
+                    ) as linrefUpdateCursor:
+
+                        for linrefUpdateRecord in linrefUpdateCursor:
+
+                            typeLRS = linrefUpdateRecord[5]
+                            typeSeg = linrefUpdateRecord[6]
+
+                            # PRIMARY SEGMENT
+                            if typeSeg == "P":
+
+                                if typeLRS in [1,3]:
+                                    # scaled M values
+                                    linrefUpdateRecord[ 2 ] = linRefUpdate_mp_from
+                                    linrefUpdateRecord[ 3 ] = linRefUpdate_mp_to
+
+                                elif typeLRS == 2:
+                                    # flipped scaled m-values
+                                    linrefUpdateRecord[ 2 ] = linRefUpdate_mp_to
+                                    linrefUpdateRecord[ 3 ] = linRefUpdate_mp_from
+
+                            # SECONDARY SEGMENT
+                            elif typeSeg == "S":
+                                pass
+
+                            elif typeSeg == "E":
+                                pass
+
+                            elif typeSeg == "ES":
+                                pass
+
+                            elif typeSeg == "AD":
+                                pass
 
 
+
+
+
+
+                    # update the row
+                    # linrefCursor.updateRow(linrefRow)
+
+                    del segmentRow
+                    del segmentCursor
+
+            # del linrefCursor, linrefRow
+
+        except arcpy.ExecuteError:
+
+            arcpy.AddError(arcpy.GetMessages(2))
+
+        except Exception as ex:
+
+            arcpy.AddError(traceback.format_exc())
+
+            e = sys.exc_info()[1]
+            arcpy.AddMessage("Exception updating segment geometry: " + ex.message + "  ------- \n " + e.args[0])
+
+        arcpy.AddMessage("Aggregate Distance by Geometry: " + str(distance_total_gis) + " feet.  " + str(distance_total_gis / 5280) + " miles.")
+        arcpy.AddMessage("Milepost Distance: " + str(distance_total_mp) + " miles.")
 
         return
+
 
