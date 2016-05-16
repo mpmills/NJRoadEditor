@@ -1203,8 +1203,8 @@ class ExtensionClass1(object):
             if monitorOp == "1101":  # Merge
                 print "you just merged a feature " + monitorOp
             if monitorOp == "1110" and self.NJRE_Env:  # Split Endpoint
-                NJRE_logger.info('Split endpoint. {0}'.format(erebus.sqlGUID("SEG_GUID",lastselect['SEG_GUID'])))
                 try:
+                    NJRE_logger.info('Split endpoint. {0}'.format(erebus.sqlGUID("SEG_GUID",lastselect['SEG_GUID'])))
                     print "you just split a feature " + monitorOp
                     esesh['onStartOperation'] = 0; esesh['onChangeFeature'] = 0; esesh['onCreateFeature'] = 0; esesh['onDeleteFeature'] = 0
                     monitorOp = "Split"
@@ -1432,7 +1432,7 @@ class ExtensionClass1(object):
                     INTOOL = False
                     esesh['onStartOperation'] = 0; esesh['onChangeFeature'] = 0; esesh['onCreateFeature'] = 0; esesh['onDeleteFeature'] = 0
                     monitorOp = 'Empty'
-                    pythonaddins.MessageBox('The NJRE Python Add-In Split tool failed due to an error. Please email the "NJRE_logger.log" log file (in your scratch workspace) to njgin@oit.state.nj.us\n\n\n{0}'.format(trace), 'Split Error', 0)
+                    pythonaddins.MessageBox('The NJRE Python Add-In Split tool failed due to an error. Please try the operation again in a new edit session. If the issue persists, please email the "NJRE_logger.log" log file (in your scratch workspace) to njgin@oit.state.nj.us\n\n\n{0}'.format(trace), 'Split Error', 0)
                     NJRE_logger.error('Split tool failed with exception. User received message box with error')
                     NJRE_logger.exception(trace)
                     try:
