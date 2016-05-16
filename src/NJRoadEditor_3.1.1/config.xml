@@ -2,7 +2,7 @@
     <Name>NJ Road Editor</Name>
     <AddInID>{cdc19deb-157a-48ad-97de-f0d5c0658e4e}</AddInID>
     <Description>Contains tools to edit NJ roads data.</Description>
-    <Version>3.1.1.0.9</Version>
+    <Version>3.1.1.0.11</Version>
     <Image>Images\gis_logo_stack.jpg</Image>
     <Author>NJ OGIS</Author>
     <Company>NJ OIT OGIS</Company>
