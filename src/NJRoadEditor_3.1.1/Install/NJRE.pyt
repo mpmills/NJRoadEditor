@@ -838,7 +838,7 @@ class NewSegment(object):
             parameterType="Optional",
             direction="Input")
         param32.filter.type = "ValueList"
-        param32.filter.list = ["NJDOT", "Tiger", "County", "MOD IV", "Other", "NJOIT", "Taxmap"]
+        param32.filter.list = ["NJDOT SLD", "Tiger", "County", "MOD IV", "Other", "NJOIT", "Taxmap"]
 
         param22.category = "SEG_NAME"
         param23.category = "SEG_NAME"
@@ -899,7 +899,7 @@ class NewSegment(object):
             parameterType="Optional",
             direction="Input")
         param37.filter.type = "ValueList"
-        param37.filter.list = ["NJDOT", "Tiger", "County", "MOD IV", "Other", "NJOIT", "Taxmap"]
+        param37.filter.list = ["NJDOT SLD", "Tiger", "County", "MOD IV", "Other", "NJOIT", "TAXMAP"]
 
         param33.category = "SEG_SHIELD"
         param34.category = "SEG_SHIELD"
@@ -992,7 +992,7 @@ class NewSegment(object):
             parameterType="Optional",
             direction="Input")
         param45.filter.type = "ValueList"
-        param45.filter.list = ["Interstate", "US Route", "State Route", "Highway Authority Route", "500 Series Route", "Other County Route", "Local Road", "Ramp", "Alley", "Park / Military"]
+        param45.filter.list = ["Interstate", "US Highway", "State Highway", "Highway Authority Route", "500 Series Route", "Other County Route", "Local Road", "Ramp", "Alley", "Park / Military"]
 
         #
         param46 = arcpy.Parameter(
@@ -1233,8 +1233,8 @@ class NewSegment(object):
                 fnn = erebus.FullName(parameters[25].value, parameters[26].value, parameters[27].value, parameters[28].value, parameters[29].value, parameters[30].value, parameters[31].value)
                 parameters[24].value = fnn.concatenate()
 
-            if parameters[34].value == "State Route":
-                parameters[26].value = "State Route"
+            if parameters[34].value == "State Highway":
+                parameters[26].value = "State Highway"
                 fnn = erebus.FullName(parameters[25].value, parameters[26].value, parameters[27].value, parameters[28].value, parameters[29].value, parameters[30].value, parameters[31].value)
                 parameters[24].value = fnn.concatenate()
 
@@ -1245,8 +1245,8 @@ class NewSegment(object):
                 fnn = erebus.FullName(parameters[25].value, parameters[26].value, parameters[27].value, parameters[28].value, parameters[29].value, parameters[30].value, parameters[31].value)
                 parameters[24].value = fnn.concatenate()
 
-            if parameters[34].value == "US Route":
-                parameters[26].value = "US Route"
+            if parameters[34].value == "US Highway":
+                parameters[26].value = "US Highway"
                 fnn = erebus.FullName(parameters[25].value, parameters[26].value, parameters[27].value, parameters[28].value, parameters[29].value, parameters[30].value, parameters[31].value)
                 parameters[24].value = fnn.concatenate()
 
@@ -5849,7 +5849,7 @@ class LRS(object):
             parameterType="Optional",
             direction="Input")
         param14.filter.type = "ValueList"
-        param14.filter.list = ["North to South", "South to North", "East to West", "West to East"]
+        param14.filter.list = ["<null>", "North to South", "South to North", "East to West", "West to East"]
 
         #
         param15 = arcpy.Parameter(
@@ -6247,8 +6247,8 @@ class LRS(object):
                 parameters[11].setErrorMessage("Please Choose a ROUTE_TYPE_ID")
             if parameters[11].value < 7 and parameters[14].value not in ("North to South", "South to North", "East to West", "West to East"):
                 parameters[14].setErrorMessage("Please Choose an SLD_DIRECTION")
-            elif parameters[11].value >= 7 and parameters[14].value:
-                parameters[14].setErrorMessage("Please make SLD_DIRECTION a blank (clear the field)")
+            elif parameters[11].value >= 7 and parameters[14].value in ("North to South", "South to North", "East to West", "West to East"):
+                parameters[14].setErrorMessage("Please make SLD_DIRECTION <null>")
             else:
                 parameters[14].clearMessage()
 
@@ -6296,8 +6296,8 @@ class LRS(object):
                 if rec[3] == 2:
                     if rec[2]:
                         if len(rec[2]) == 10:
-                            if rec[2][8] != '_' or rec[2][9] != '_':
-                                parameters[0].setErrorMessage('Invalid SRI Value in {0}. If LRS_TYPE is 2, then positions 9 and 10 must be "_" '.format(rec[0]))
+                            if rec[2][9] != '_':
+                                parameters[0].setErrorMessage('Invalid SRI Value in {0}. If LRS_TYPE is 2, then position 10 must be "_" '.format(rec[0]))
                                 err = True; break
             if not err:
                 parameters[0].clearMessage()
@@ -6838,7 +6838,10 @@ class LRS(object):
                         cursor = arcpy.UpdateCursor(sldtab, seg_sql)
                         for row in cursor:
                             for cc in changeInds:
-                                row.setValue(walkXsld[cc], RecordsValues_sld[presentInd][cc])
+                                if cc == 5 and RecordsValues_sld[presentInd][cc]:
+                                    row.setValue(walkXsld[cc], None)
+                                else:
+                                    row.setValue(walkXsld[cc], RecordsValues_sld[presentInd][cc])
                                 arcpy.AddMessage('\nUpdated {0} in SLD_ROUTE. {1}, \nUpdated {2} from {3} to {4}'.format(key ,seg_sql, walkXsld[cc], self.Records_sld[ij][cc], RecordsValues_sld[i][cc]))
                             cursor.updateRow(row)
                         del row, cursor
@@ -6884,7 +6887,7 @@ class LRS(object):
                                 row.setValue("SLD_NAME", rec[3])
                             if rec[4]:
                                 row.setValue("SLD_COMMENT", rec[4])
-                            if rec[5]:
+                            if rec[5] and rec[5] is not '<null>':
                                 row.setValue("SLD_DIRECTION", rec[5])
                             if rec[6]:
                                 row.setValue("SIGN_NAME", rec[6])
@@ -7230,7 +7233,7 @@ class EditNames(object):
             parameterType="Optional",
             direction="Input")
         param4.filter.type = "ValueList"
-        param4.filter.list = ["ACE", "ACB", "COR", "GSP", "INT", "PIP", "STR","TPK","USR"]
+        param4.filter.list = ["ACE", "ACB", "COR", "GSP", "INT", "PIP", "STR", "TPK", "USR"]
 
         #
         param5 = arcpy.Parameter(
@@ -7627,7 +7630,7 @@ class EditNames(object):
             parameters[7].value = fnn.concatenate()
 
         if parameters[3].value == "STR":
-            parameters[9].value = "State Route"
+            parameters[9].value = "State Highway"
             fnn = erebus.FullName(parameters[8].value, parameters[9].value, parameters[10].value, parameters[11].value, parameters[12].value, parameters[13].value, parameters[14].value)
             parameters[7].value = fnn.concatenate()
 
@@ -7639,7 +7642,7 @@ class EditNames(object):
             parameters[7].value = fnn.concatenate()
 
         if parameters[3].value == "USR":
-            parameters[9].value = "US Route"
+            parameters[9].value = "US Highway"
             fnn = erebus.FullName(parameters[8].value, parameters[9].value, parameters[10].value, parameters[11].value, parameters[12].value, parameters[13].value, parameters[14].value)
             parameters[7].value = fnn.concatenate()
 
@@ -7802,6 +7805,7 @@ class EditNames(object):
         # ----------------------------------------------------------------------
         # Make sure the name type/ranks are valid
         L1H1 = [False]*2
+        Els = ['L2', 'L3', 'L4', 'L5', 'L6', 'L7', 'L8']
         if parameters[0].values:
             Rchecks = parameters[0].values
             ntr = []; err = False
@@ -7815,7 +7819,7 @@ class EditNames(object):
             if not L1H1[0] and not L1H1[1]:
                 parameters[0].setErrorMessage("Missing L1 and/or H1 Name Record")
 
-            if (not L1H1[0] and L1H1[1]) and ('L2' or 'L3' or 'L4' or 'L5' or 'L6' or 'L7' or 'L8' in ntr):
+            if (not L1H1[0] and L1H1[1]) and len([x for x in ntr if x[0] == 'L' and int(x[1]) > 1 ]) > 0:
                 parameters[0].setErrorMessage("Missing L1 and/or H1 Name Record")
 
             ntrsort = sorted(ntr, reverse=True)

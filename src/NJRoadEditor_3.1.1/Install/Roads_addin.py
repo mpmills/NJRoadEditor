@@ -659,6 +659,24 @@ class ButtonClass701(object):
             print "error:" + ex.message
             # arcpy.AddMessage("something went wrong." + ex.message)
 
+class ButtonClass702(object):
+    """Implementation for Roads_addin.button_mbi_RemilepostRoute"""
+    def __init__(self):
+        self.enabled = False
+        self.checked = False
+
+    def onClick(self):
+        global tbx_mbi_sld_manager
+        try:
+            pythonaddins.GPToolDialog(tbx_mbi_sld_manager, "RemilepostRoute")
+            # arcpy.RefreshActiveView()
+        except Exception as ex:
+            trace = traceback.format_exc()
+            print trace
+            print "error:" + ex.message
+            # arcpy.AddMessage("something went wrong." + ex.message)
+
+
 #------------------------------------------------------------------------------
 # EXTENSION - NJ ROAD EDITOR EXTENSION
 class ExtensionClass1(object):
@@ -1060,6 +1078,7 @@ class ExtensionClass1(object):
                 
                 # mbi buttons
                 buttonChangeSRI.enabled = True
+                buttonRemilepostRoute.enabled = True
                 
                 self.NJRE_Env = True
 
@@ -1107,6 +1126,7 @@ class ExtensionClass1(object):
         
         # mbi buttons disable
         buttonChangeSRI.enabled = False
+        buttonRemilepostRoute.enabled = False
         
         #buttonBatchBuildName.enabled = False
 
@@ -1183,8 +1203,8 @@ class ExtensionClass1(object):
             if monitorOp == "1101":  # Merge
                 print "you just merged a feature " + monitorOp
             if monitorOp == "1110" and self.NJRE_Env:  # Split Endpoint
-                NJRE_logger.info('Split endpoint. {0}'.format(erebus.sqlGUID("SEG_GUID",lastselect['SEG_GUID'])))
                 try:
+                    NJRE_logger.info('Split endpoint. {0}'.format(erebus.sqlGUID("SEG_GUID",lastselect['SEG_GUID'])))
                     print "you just split a feature " + monitorOp
                     esesh['onStartOperation'] = 0; esesh['onChangeFeature'] = 0; esesh['onCreateFeature'] = 0; esesh['onDeleteFeature'] = 0
                     monitorOp = "Split"
@@ -1412,7 +1432,7 @@ class ExtensionClass1(object):
                     INTOOL = False
                     esesh['onStartOperation'] = 0; esesh['onChangeFeature'] = 0; esesh['onCreateFeature'] = 0; esesh['onDeleteFeature'] = 0
                     monitorOp = 'Empty'
-                    pythonaddins.MessageBox('The NJRE Python Add-In Split tool failed due to an error. Please email the "NJRE_logger.log" log file (in your scratch workspace) to njgin@oit.state.nj.us\n\n\n{0}'.format(trace), 'Split Error', 0)
+                    pythonaddins.MessageBox('The NJRE Python Add-In Split tool failed due to an error. Please try the operation again in a new edit session. If the issue persists, please email the "NJRE_logger.log" log file (in your scratch workspace) to njgin@oit.state.nj.us\n\n\n{0}'.format(trace), 'Split Error', 0)
                     NJRE_logger.error('Split tool failed with exception. User received message box with error')
                     NJRE_logger.exception(trace)
                     try:
