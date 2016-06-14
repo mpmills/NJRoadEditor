@@ -551,7 +551,7 @@ class RemilepostRoute(object):
                 mp_dropdown_data = arcpy.da.TableToNumPyArray(
                     in_table=linreftab,
                     field_names=[ "MILEPOST_FR", "MILEPOST_TO", "SEG_TYPE_ID" ],
-                    where_clause="SRI='" + p_route_sri + "' AND LRS_TYPE_ID IN (1)",
+                    where_clause="SRI='" + p_route_sri + "' AND LRS_TYPE_ID IN (1)"
                 )
 
                 secondary = "S" in mp_dropdown_data[0][2]
@@ -763,6 +763,9 @@ class RemilepostRoute(object):
         def getSegmentUpdateObject( seg_guid, type_seg, mp_from, mp_to, mp_from_parent, mp_to_parent, length, rcf_id ):
 
             update_object = { }
+
+            if rcf_id is None or rcf_id == 'None':
+                rcf_id = ''
 
             if type_seg in [ "P", "E" ]:
 
@@ -1215,6 +1218,8 @@ class RemilepostRoute(object):
         arcpy.AddMessage("Aggregate Distance by Geometry: " + str(distance_total_gis) + " feet.  " + str(distance_total_gis / 5280) + " miles.")
         arcpy.AddMessage("Milepost Distance: " + str(distance_mp_total) + " miles.")
 
+        parent_insert_fields = [ "SEG_ID", "SEG_GUID", "SRI", "LRS_TYPE_ID", "SEG_TYPE_ID", "MILEPOST_FR", "MILEPOST_TO", "RCF" ]
+
         # now cycle through lin ref update objects and update corresponding table records
         try:
 
@@ -1226,6 +1231,20 @@ class RemilepostRoute(object):
                 seg_guid = linref_update.keys()[0]
                 linref_rec = linref_update[ seg_guid ]
 
+                # create a list to add lrs_type_id updates.. if lrs_type_id 2 - parent is missing, we'll insert a record for it
+                rec_updates = []
+
+                insert_segid = None
+                insert_seg_guid = seg_guid
+                insert_SRI = p_route_sri
+                insert_lrs_type_id = None
+                insert_SEG_TYPE_ID = None
+                insert_rcf = None
+                insert_milepost_fr = None
+                insert_milepost_to = None
+
+                # "SEG_ID", "SEG_GUID", "SRI", "LRS_TYPE_ID", "SEG_TYPE_ID", "MILEPOST_FR", "MILEPOST_TO", "RCF",
+
                 with arcpy.da.UpdateCursor(
                     in_table=linreftab,
                     field_names=[ "SEG_ID", "SEG_GUID", "MILEPOST_FR", "MILEPOST_TO", "RCF", "LRS_TYPE_ID", "SEG_TYPE_ID", "SRI" ],
@@ -1234,12 +1253,18 @@ class RemilepostRoute(object):
 
                     for ur in uc:
 
+                        insert_segid = ur[0]
+                        insert_lrs_type_id = int(ur[5])
+                        insert_SEG_TYPE_ID = ur[6]
+                        insert_milepost_fr = linref_rec[ "lrs_2" ][ 'from' ]
+                        insert_milepost_to = linref_rec[ "lrs_2" ][ 'to' ]
+                        insert_rcf = linref_rec[ "rcf_id" ]
+
                         # sri is primary
                         # if ur[6] in ["E","ES"]:
 
                         lrs_type_id = ur[5]
 
-                        arcpy.AddMessage( "update lrs_type_id" + str( lrs_type_id ) )
                         # update from
                         ur[ 2 ] = linref_rec[ "lrs_" + str( lrs_type_id ) ][ 'from' ]
 
@@ -1253,6 +1278,24 @@ class RemilepostRoute(object):
                         arcpy.AddMessage( ur )
 
                         uc.updateRow( ur )
+
+                        rec_updates.append( insert_lrs_type_id )
+
+                    # is parent record present
+                    if 2 not in rec_updates:
+
+                        arcpy.AddMessage( "Attempting to insert missing parent record: " + seg_guid )
+
+                        parent_insert = arcpy.da.InsertCursor( linreftab, parent_insert_fields )
+
+                        # "SEG_ID", "SEG_GUID", "SRI", "LRS_TYPE_ID", "SEG_TYPE_ID", "MILEPOST_FR", "MILEPOST_TO", "RCF"
+
+                        parent_insert.insertRow(
+                            ( insert_segid, insert_seg_guid, insert_SRI, 2, insert_SEG_TYPE_ID, insert_milepost_fr, insert_milepost_to, insert_rcf )
+                        )
+
+                        arcpy.AddMessage( "Inserted Parent record for SEG GUID: " + seg_guid )
+
 
         except arcpy.ExecuteError:
 
